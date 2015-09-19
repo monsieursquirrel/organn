@@ -14,7 +14,7 @@ const SHIFT: f64 = (1 << 16) as f64;
 
 struct PhaseIter {
     current: u32,
-    step: u32,
+    loop_len: u32,
     outscale: f64,
 }
 
@@ -22,7 +22,7 @@ impl PhaseIter {
     fn new(freq: f64, sample_rate: u32, outscale: f64) -> Self {
         PhaseIter {
             current: 0,
-            step: ((freq * SHIFT) / (sample_rate as f64)) as u32,
+            loop_len: (((sample_rate as f64) * SHIFT) / (freq)) as u32,
             outscale: outscale
         }
     }
@@ -32,8 +32,8 @@ impl Iterator for PhaseIter {
     type Item = f64;
     fn next(&mut self) -> Option<f64> {
         let pos = self.current;
-        self.current = (self.current + self.step) % (1 << 16);
-        Some(((pos as f64) * self.outscale) / SHIFT)
+        self.current = (self.current + (1 << 16)) % self.loop_len;
+        Some(((pos as f64) * self.outscale) / (self.loop_len as f64))
     }
 }
 

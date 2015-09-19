@@ -53,7 +53,6 @@ impl Oscillator {
     }
 
     pub fn set_freq(&mut self, freq: f32, sample_rate: u32) {
-        println!("freq: {}", freq);
         self.phase.set_freq(freq, sample_rate);
     }
 

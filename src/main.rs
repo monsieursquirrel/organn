@@ -11,6 +11,7 @@ use num::Float;
 use num::traits::Num;
 use std::f32::consts::PI;
 use itertools::Zip;
+use std::sync::mpsc;
 
 const SHIFT: f32 = (1 << 16) as f32;
 
@@ -21,12 +22,24 @@ struct PhaseIter {
 }
 
 impl PhaseIter {
+    fn calc_loop(freq: f32, sample_rate: u32) -> u32 {
+        (((sample_rate as f32) * SHIFT) / (freq)) as u32
+    }
+
     fn new(freq: f32, sample_rate: u32, outscale: f32) -> Self {
         PhaseIter {
             current: 0,
-            loop_len: (((sample_rate as f32) * SHIFT) / (freq)) as u32,
+            loop_len: calc_loop(freq, sample_rate),
             outscale: outscale
         }
+    }
+
+    fn set_freq(&mut self, freq: f32, sample_rate: u32) {
+        // need to try to avoid jumps in output
+        let new_len = calc_loop(freq, sample_rate);
+        let new_pos = (self.current * new_len) / self.loop_len;
+        self.loop_len = new_len;
+        self.current = new_pos;
     }
 }
 
@@ -65,9 +78,30 @@ fn main() {
             (s7 * 0.0625)
             );
 
+    // create channel for updates
+    let (send, recv) = mpsc::channel();
+
     // Construct an Output audio unit.
     let audio_unit = AudioUnit::new(Type::Output, SubType::HalOutput)
         .render_callback(Box::new(move |buffer, num_frames| {
+            // process messages for this thread
+            loop {
+                let message = recv.try_recv();
+                match message {
+                    Ok(pitch) => {
+                        // update pitch
+                        
+                    }
+                    Err(mpsc::TryRecvError::Empty) => {
+                        break;
+                    }
+                    Err(mpsc::TryRecvError::Disconnected) => {
+                        // get out of here
+                        return Err(());
+                    }
+                }
+            }
+
             for frame in (0..num_frames) {
                 let sample = mixed.next().unwrap();
                 for channel in buffer.iter_mut() {

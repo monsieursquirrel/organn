@@ -44,10 +44,23 @@ fn main() {
     let h1 = PhaseIter::new(220.0 * 2.0, 44_100, PI * 2.0).map(|phase| phase.sin() as f32);
     let h2 = PhaseIter::new(220.0 * 3.0, 44_100, PI * 2.0).map(|phase| phase.sin() as f32);
     let h3 = PhaseIter::new(220.0 * 4.0, 44_100, PI * 2.0).map(|phase| phase.sin() as f32);
+    let h4 = PhaseIter::new(220.0 * 5.0, 44_100, PI * 2.0).map(|phase| phase.sin() as f32);
+    let h5 = PhaseIter::new(220.0 * 6.0, 44_100, PI * 2.0).map(|phase| phase.sin() as f32);
+    let h6 = PhaseIter::new(220.0 * 7.0, 44_100, PI * 2.0).map(|phase| phase.sin() as f32);
+    let h7 = PhaseIter::new(220.0 * 8.0, 44_100, PI * 2.0).map(|phase| phase.sin() as f32);
 
     // mix them
-    let mut mixed = Zip::new((h0, h1, h2, h3))
-        .map(|(s0, s1, s2, s3)| (s0 * 0.5) + (s1 * 0.25) + (s2 * 0.125) + (s3 * 0.0625));
+    let mut mixed = Zip::new((h0, h1, h2, h3, h4, h5, h6, h7))
+        .map(|(s0, s1, s2, s3, s4, s5, s6, s7)|
+            (s0 * 0.5) +
+            (s1 * 0.25) +
+            (s2 * 0.125) +
+            (s3 * 0.0625) +
+            (s4 * 0.0625) +
+            (s5 * 0.0625) +
+            (s6 * 0.0625) +
+            (s7 * 0.0625)
+            );
 
     // Construct an Output audio unit.
     let audio_unit = AudioUnit::new(Type::Output, SubType::HalOutput)

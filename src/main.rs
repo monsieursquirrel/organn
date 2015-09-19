@@ -18,7 +18,8 @@ mod mixer;
 
 fn main() {
 
-    let freq = Step(57.0).to_hz().hz();
+    // start oscillators on A (440hz)
+    let freq = Step(69.0).to_hz().hz();
     // generate harmonics
     let mut oscillators: Vec<_> = (0..8).map(|mult| oscillator::Oscillator::new(freq * ((mult + 1) as f32), 44_100)).collect();
 
@@ -27,9 +28,10 @@ fn main() {
 
     mixer.set_level(0, 0.5);
     mixer.set_level(1, 0.3);
+    mixer.set_level(2, 0.05);
     mixer.set_level(3, 0.2);
-    mixer.set_level(4, 0.1);
-    mixer.set_level(5, 0.1);
+    mixer.set_level(4, 0.05);
+    mixer.set_level(5, 0.2);
     mixer.set_level(6, 0.05);
     mixer.set_level(7, 0.05);
 
@@ -72,7 +74,7 @@ fn main() {
         .start()
         .unwrap();
 
-    let mut note = 57;
+    let mut note = 21;
     loop {
         ::std::thread::sleep_ms(3000);
         note += 1;

@@ -41,7 +41,9 @@ fn main() {
         .start()
         .unwrap();
 
-    ::std::thread::sleep_ms(3000);
+    loop {
+        ::std::thread::sleep_ms(30000);
+    }
 
     audio_unit.close();
 

@@ -14,32 +14,24 @@ use itertools::Zip;
 use std::sync::mpsc;
 
 mod oscillator;
+mod mixer;
 
 fn main() {
 
     let freq = Step(57.0).to_hz().hz();
     // generate harmonics
-    let h0 = oscillator::Oscillator::new(freq * 1.0, 44_100);
-    let h1 = oscillator::Oscillator::new(freq * 2.0, 44_100);
-    let h2 = oscillator::Oscillator::new(freq * 3.0, 44_100);
-    let h3 = oscillator::Oscillator::new(freq * 4.0, 44_100);
-    let h4 = oscillator::Oscillator::new(freq * 5.0, 44_100);
-    let h5 = oscillator::Oscillator::new(freq * 6.0, 44_100);
-    let h6 = oscillator::Oscillator::new(freq * 7.0, 44_100);
-    let h7 = oscillator::Oscillator::new(freq * 8.0, 44_100);
+    let mut oscillators: Vec<_> = (0..8).map(|mult| oscillator::Oscillator::new(freq * ((mult + 1) as f32), 44_100)).collect();
 
     // mix them
-    let mut mixed = Zip::new((h0, h1, h2, h3, h4, h5, h6, h7))
-        .map(|(s0, s1, s2, s3, s4, s5, s6, s7)|
-            (s0 * 0.5) +
-            (s1 * 0.25) +
-            (s2 * 0.125) +
-            (s3 * 0.0625) +
-            (s4 * 0.0625) +
-            (s5 * 0.0625) +
-            (s6 * 0.0625) +
-            (s7 * 0.0625)
-            );
+    let mut mixer = mixer::Mixer::new(vec![0.0; oscillators.len()]);
+
+    mixer.set_level(0, 0.5);
+    mixer.set_level(1, 0.3);
+    mixer.set_level(3, 0.2);
+    mixer.set_level(4, 0.1);
+    mixer.set_level(5, 0.1);
+    mixer.set_level(6, 0.05);
+    mixer.set_level(7, 0.05);
 
     // create channel for updates
     let (send, recv) = mpsc::channel();
@@ -53,7 +45,10 @@ fn main() {
                 match message {
                     Ok(pitch) => {
                         // update pitch
-
+                        let freq = Step(pitch).to_hz().hz();
+                        for (num, oscillator) in oscillators.iter_mut().enumerate() {
+                            oscillator.set_freq(freq * ((num + 1) as f32), 44_100);
+                        }
                     }
                     Err(mpsc::TryRecvError::Empty) => {
                         break;
@@ -66,7 +61,8 @@ fn main() {
             }
 
             for frame in (0..num_frames) {
-                let sample = mixed.next().unwrap();
+                let osc_outputs: Vec<_> = oscillators.iter_mut().map(|osc| osc.next().unwrap()).collect();
+                let sample = mixer.mix(&osc_outputs);
                 for channel in buffer.iter_mut() {
                     channel[frame] = sample;
                 }
@@ -76,8 +72,11 @@ fn main() {
         .start()
         .unwrap();
 
+    let mut note = 57;
     loop {
-        ::std::thread::sleep_ms(30000);
+        ::std::thread::sleep_ms(3000);
+        note += 1;
+        send.send(note as f32);
     }
 
     audio_unit.close();

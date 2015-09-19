@@ -26,7 +26,7 @@ impl PhaseIter {
     fn set_freq(&mut self, freq: f32, sample_rate: u32) {
         // try to avoid jumps in output by remapping the current position to the new loop len
         let new_len = Self::calc_loop(freq, sample_rate);
-        let new_pos = (self.pos * new_len) / self.loop_len;
+        let new_pos = (((self.pos as u64) * (new_len as u64)) / (self.loop_len as u64)) as u32;
         self.loop_len = new_len;
         self.pos = new_pos;
     }
@@ -53,6 +53,7 @@ impl Oscillator {
     }
 
     pub fn set_freq(&mut self, freq: f32, sample_rate: u32) {
+        println!("freq: {}", freq);
         self.phase.set_freq(freq, sample_rate);
     }
 }

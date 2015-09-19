@@ -56,11 +56,8 @@ impl Oscillator {
         println!("freq: {}", freq);
         self.phase.set_freq(freq, sample_rate);
     }
-}
 
-impl Iterator for Oscillator {
-    type Item = f32;
-    fn next(&mut self) -> Option<f32> {
-        self.phase.next().map(|phase| phase.sin())
+    pub fn get_sample(&mut self) -> f32 {
+        self.phase.next().unwrap().sin()
     }
 }

@@ -61,7 +61,7 @@ fn main() {
             }
 
             for frame in (0..num_frames) {
-                let osc_outputs: Vec<_> = oscillators.iter_mut().map(|osc| osc.next().unwrap()).collect();
+                let osc_outputs: Vec<_> = oscillators.iter_mut().map(|osc| osc.get_sample()).collect();
                 let sample = mixer.mix(&osc_outputs);
                 for channel in buffer.iter_mut() {
                     channel[frame] = sample;

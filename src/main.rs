@@ -3,51 +3,54 @@
 extern crate coreaudio_rs as coreaudio;
 extern crate num;
 extern crate itertools;
+extern crate pitch_calc;
 
 use coreaudio::audio_unit::{AudioUnit, Type, SubType};
+use pitch_calc::{Step, Hz};
 use num::Float;
 use num::traits::Num;
-use std::f64::consts::PI;
+use std::f32::consts::PI;
 use itertools::Zip;
 
-const SHIFT: f64 = (1 << 16) as f64;
+const SHIFT: f32 = (1 << 16) as f32;
 
 struct PhaseIter {
     current: u32,
     loop_len: u32,
-    outscale: f64,
+    outscale: f32,
 }
 
 impl PhaseIter {
-    fn new(freq: f64, sample_rate: u32, outscale: f64) -> Self {
+    fn new(freq: f32, sample_rate: u32, outscale: f32) -> Self {
         PhaseIter {
             current: 0,
-            loop_len: (((sample_rate as f64) * SHIFT) / (freq)) as u32,
+            loop_len: (((sample_rate as f32) * SHIFT) / (freq)) as u32,
             outscale: outscale
         }
     }
 }
 
 impl Iterator for PhaseIter {
-    type Item = f64;
-    fn next(&mut self) -> Option<f64> {
+    type Item = f32;
+    fn next(&mut self) -> Option<f32> {
         let pos = self.current;
         self.current = (self.current + (1 << 16)) % self.loop_len;
-        Some(((pos as f64) * self.outscale) / (self.loop_len as f64))
+        Some(((pos as f32) * self.outscale) / (self.loop_len as f32))
     }
 }
 
 fn main() {
 
+    let freq = Step(57.0).to_hz().hz();
     // generate harmonics
-    let h0 = PhaseIter::new(220.0 * 1.0, 44_100, PI * 2.0).map(|phase| phase.sin() as f32);
-    let h1 = PhaseIter::new(220.0 * 2.0, 44_100, PI * 2.0).map(|phase| phase.sin() as f32);
-    let h2 = PhaseIter::new(220.0 * 3.0, 44_100, PI * 2.0).map(|phase| phase.sin() as f32);
-    let h3 = PhaseIter::new(220.0 * 4.0, 44_100, PI * 2.0).map(|phase| phase.sin() as f32);
-    let h4 = PhaseIter::new(220.0 * 5.0, 44_100, PI * 2.0).map(|phase| phase.sin() as f32);
-    let h5 = PhaseIter::new(220.0 * 6.0, 44_100, PI * 2.0).map(|phase| phase.sin() as f32);
-    let h6 = PhaseIter::new(220.0 * 7.0, 44_100, PI * 2.0).map(|phase| phase.sin() as f32);
-    let h7 = PhaseIter::new(220.0 * 8.0, 44_100, PI * 2.0).map(|phase| phase.sin() as f32);
+    let h0 = PhaseIter::new(freq * 1.0, 44_100, PI * 2.0).map(|phase| phase.sin() as f32);
+    let h1 = PhaseIter::new(freq * 2.0, 44_100, PI * 2.0).map(|phase| phase.sin() as f32);
+    let h2 = PhaseIter::new(freq * 3.0, 44_100, PI * 2.0).map(|phase| phase.sin() as f32);
+    let h3 = PhaseIter::new(freq * 4.0, 44_100, PI * 2.0).map(|phase| phase.sin() as f32);
+    let h4 = PhaseIter::new(freq * 5.0, 44_100, PI * 2.0).map(|phase| phase.sin() as f32);
+    let h5 = PhaseIter::new(freq * 6.0, 44_100, PI * 2.0).map(|phase| phase.sin() as f32);
+    let h6 = PhaseIter::new(freq * 7.0, 44_100, PI * 2.0).map(|phase| phase.sin() as f32);
+    let h7 = PhaseIter::new(freq * 8.0, 44_100, PI * 2.0).map(|phase| phase.sin() as f32);
 
     // mix them
     let mut mixed = Zip::new((h0, h1, h2, h3, h4, h5, h6, h7))

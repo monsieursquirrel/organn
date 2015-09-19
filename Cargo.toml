@@ -1,0 +1,4 @@
+[package]
+name = "organn"
+version = "0.1.0"
+authors = ["monsieursquirrel <conrad@bebbington.org>"]

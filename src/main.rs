@@ -40,10 +40,10 @@ impl Iterator for PhaseIter {
 fn main() {
 
     // generate harmonics
-    let h0 = PhaseIter::new(440.0 * 1.0, 44_100, PI * 2.0).map(|phase| phase.sin() as f32);
-    let h1 = PhaseIter::new(440.0 * 2.0, 44_100, PI * 2.0).map(|phase| phase.sin() as f32);
-    let h2 = PhaseIter::new(440.0 * 3.0, 44_100, PI * 2.0).map(|phase| phase.sin() as f32);
-    let h3 = PhaseIter::new(440.0 * 4.0, 44_100, PI * 2.0).map(|phase| phase.sin() as f32);
+    let h0 = PhaseIter::new(220.0 * 1.0, 44_100, PI * 2.0).map(|phase| phase.sin() as f32);
+    let h1 = PhaseIter::new(220.0 * 2.0, 44_100, PI * 2.0).map(|phase| phase.sin() as f32);
+    let h2 = PhaseIter::new(220.0 * 3.0, 44_100, PI * 2.0).map(|phase| phase.sin() as f32);
+    let h3 = PhaseIter::new(220.0 * 4.0, 44_100, PI * 2.0).map(|phase| phase.sin() as f32);
 
     // mix them
     let mut mixed = Zip::new((h0, h1, h2, h3))

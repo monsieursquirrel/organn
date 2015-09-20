@@ -5,9 +5,10 @@ extern crate num;
 extern crate pitch_calc;
 extern crate midi;
 
+mod produce_audio;
 mod oscillator;
 mod mixer;
-mod produce_audio;
+mod env;
 mod voice;
 
 use coreaudio::audio_unit::{AudioUnit, Type, SubType};

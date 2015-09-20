@@ -2,7 +2,6 @@
 
 extern crate coreaudio_rs as coreaudio;
 extern crate num;
-extern crate itertools;
 extern crate pitch_calc;
 
 mod oscillator;

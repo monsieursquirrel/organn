@@ -7,63 +7,13 @@ extern crate pitch_calc;
 mod oscillator;
 mod mixer;
 mod produce_audio;
+mod voice;
 
 use coreaudio::audio_unit::{AudioUnit, Type, SubType};
-use pitch_calc::Step;
 use std::sync::mpsc;
-use std::cell::RefCell;
-use std::rc::Rc;
+
 use produce_audio::{ProduceAudioMut, ProduceAudio};
-
-struct Voice {
-    oscillators: Vec<Rc<RefCell<oscillator::Oscillator>>>,
-    mixer: mixer::Mixer<Rc<RefCell<oscillator::Oscillator>>>
-}
-
-impl Voice {
-    fn new() -> Self {
-        // create the parts of the signal chain
-        let oscillators: Vec<_> = (0..8)
-            .map(|mult| Rc::new(RefCell::new(oscillator::Oscillator::new(440.0 * ((mult + 1) as f32), 44_100))))
-            .collect();
-
-
-        let borrowed_oscs: Vec<_> = oscillators.iter().map(|ref_osc| ref_osc.clone()).collect();
-        let mixer = mixer::Mixer::new(borrowed_oscs, vec![0.0; oscillators.len()]);
-
-        // get all the components into a struct so they share lifetime
-        let mut voice = Voice {
-            oscillators: oscillators,
-            mixer: mixer
-        };
-
-        // link the components together
-        voice.mixer.set_level(0, 0.5);
-        voice.mixer.set_level(1, 0.3);
-        voice.mixer.set_level(2, 0.05);
-        voice.mixer.set_level(3, 0.2);
-        voice.mixer.set_level(4, 0.05);
-        voice.mixer.set_level(5, 0.2);
-        voice.mixer.set_level(6, 0.05);
-        voice.mixer.set_level(7, 0.05);
-
-        voice
-    }
-
-    fn set_pitch(&mut self, pitch: f32) {
-        let freq = Step(pitch).to_hz().hz();
-        for (num, ref_osc) in self.oscillators.iter_mut().enumerate() {
-            let mut oscillator = (**ref_osc).borrow_mut();
-            oscillator.set_freq(freq * ((num + 1) as f32), 44_100);
-        }
-    }
-}
-
-impl ProduceAudioMut for Voice {
-    fn next_sample(&mut self) -> f32 {
-        self.mixer.next_sample()
-    }
-}
+use voice::Voice;
 
 fn main() {
     let mut voice = Voice::new();

@@ -1,5 +1,3 @@
-//! A basic output stream example, using an Output AudioUnit to generate a sine wave.
-
 extern crate coreaudio_rs as coreaudio;
 extern crate num;
 extern crate pitch_calc;

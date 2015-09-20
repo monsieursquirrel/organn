@@ -10,6 +10,7 @@ mod oscillator;
 mod mixer;
 mod env;
 mod voice;
+mod multi;
 
 use coreaudio::audio_unit::{AudioUnit, Type, SubType};
 use std::sync::mpsc;
@@ -17,13 +18,13 @@ use midi::Message;
 use midi::Channel;
 
 use produce_audio::{ProduceAudioMut, ProduceAudio};
-use voice::Voice;
+use multi::Multi;
 
 // TODO: figure out how to retrieve this from the system
 const SAMPLE_RATE: u32 = 44_100;
 
 fn main() {
-    let mut voice = Voice::new(SAMPLE_RATE);
+    let mut multi = Multi::new(32, SAMPLE_RATE);
 
     // create channel for updates
     let (send, recv) = mpsc::channel();
@@ -36,7 +37,7 @@ fn main() {
                 let message = recv.try_recv();
                 match message {
                     Ok(midi_message) => {
-                        voice.midi_message(&midi_message);
+                        multi.midi_message(&midi_message);
                     }
                     Err(mpsc::TryRecvError::Empty) => {
                         break;
@@ -49,7 +50,7 @@ fn main() {
             }
 
             for frame in (0..num_frames) {
-                let sample = voice.next_sample();
+                let sample = multi.next_sample();
                 for channel in buffer.iter_mut() {
                     channel[frame] = sample;
                 }
@@ -65,6 +66,27 @@ fn main() {
         send.send(Message::NoteOn(Channel::Ch1, note, 100)).unwrap();
         ::std::thread::sleep_ms(3000);
         send.send(Message::NoteOff(Channel::Ch1, note, 100)).unwrap();
+        ::std::thread::sleep_ms(1000);
+    }
+
+    let start_note = 45;
+    for i in (0..7) {
+        let note = start_note + (i * 2);
+        send.send(Message::NoteOn(Channel::Ch1, note,      100)).unwrap();
+        send.send(Message::NoteOn(Channel::Ch1, note + 4,  100)).unwrap();
+        send.send(Message::NoteOn(Channel::Ch1, note + 7,  100)).unwrap();
+        for _ in (0..6) {
+            for j in (0..3) {
+                let top_note = note + 12 + (j * 12);
+                send.send(Message::NoteOn(Channel::Ch1, top_note, 100)).unwrap();
+                ::std::thread::sleep_ms(150);
+                send.send(Message::NoteOff(Channel::Ch1, top_note, 100)).unwrap();
+            }
+        }
+
+        send.send(Message::NoteOff(Channel::Ch1, note,      100)).unwrap();
+        send.send(Message::NoteOff(Channel::Ch1, note + 4,  100)).unwrap();
+        send.send(Message::NoteOff(Channel::Ch1, note + 7,  100)).unwrap();
         ::std::thread::sleep_ms(1000);
     }
 

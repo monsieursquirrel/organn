@@ -37,14 +37,12 @@ impl Voice {
 
         let env = Env::new(mixer.clone(), 20, sample_rate);
 
-        let mut voice = Voice {
+        Voice {
             oscillators: oscillators,
             mixer: mixer,
             env: env,
             pitch: 0
-        };
-
-        voice
+        }
     }
 
     pub fn set_pitch(&mut self, pitch: f32) {

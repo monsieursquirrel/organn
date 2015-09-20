@@ -1,6 +1,6 @@
 [package]
 name = "organn"
-version = "0.1.2"
+version = "0.2.0"
 authors = ["monsieursquirrel <conrad@bebbington.org>"]
 
 [dependencies]

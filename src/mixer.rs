@@ -18,7 +18,7 @@ impl<T> Mixer<T> where T: ProduceAudio {
     }
 }
 
-impl<T> ProduceAudioMut for Mixer<T> where T: ProduceAudio{
+impl<T> ProduceAudioMut for Mixer<T> where T: ProduceAudio {
     fn next_sample(&mut self) -> f32 {
         self.inputs.iter()
         .zip(self.levels.iter())

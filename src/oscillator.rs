@@ -8,26 +8,33 @@ struct PhaseIter {
     pos: u32,
     loop_len: u32,
     outscale: f32,
+    sample_rate: u32
 }
 
 impl PhaseIter {
-    fn calc_loop(freq: f32, sample_rate: u32) -> u32 {
-        (((sample_rate as f32) * SHIFT) / (freq)) as u32
+    fn calc_loop(&self, freq: f32) -> u32 {
+        (((self.sample_rate as f32) * SHIFT) / (freq)) as u32
     }
 
-    fn new(freq: f32, sample_rate: u32, outscale: f32) -> Self {
+    fn new(sample_rate: u32, outscale: f32) -> Self {
         PhaseIter {
             pos: 0,
-            loop_len: Self::calc_loop(freq, sample_rate),
-            outscale: outscale
+            loop_len: 0,
+            outscale: outscale,
+            sample_rate: sample_rate
         }
     }
 
-    fn set_freq(&mut self, freq: f32, sample_rate: u32) {
-        if freq > 0.0 && freq < (sample_rate as f32 / 2.0) {
+    fn set_freq(&mut self, freq: f32) {
+        if freq > 0.0 && freq < (self.sample_rate as f32 / 2.0) {
             // try to avoid jumps in output by remapping the current position to the new loop len
-            let new_len = Self::calc_loop(freq, sample_rate);
-            let new_pos = (((self.pos as u64) * (new_len as u64)) / (self.loop_len as u64)) as u32;
+            let new_len = self.calc_loop(freq);
+            let new_pos = if self.loop_len > 0 {
+                    (((self.pos as u64) * (new_len as u64)) / (self.loop_len as u64)) as u32
+                }
+                else {
+                    0
+                };
             self.loop_len = new_len;
             self.pos = new_pos;
         }
@@ -57,14 +64,14 @@ pub struct Oscillator {
 }
 
 impl Oscillator {
-    pub fn new(freq: f32, sample_rate: u32) -> Self {
+    pub fn new(sample_rate: u32) -> Self {
         Oscillator {
-            phase: PhaseIter::new(freq, sample_rate, PI * 2.0)
+            phase: PhaseIter::new(sample_rate, PI * 2.0)
         }
     }
 
-    pub fn set_freq(&mut self, freq: f32, sample_rate: u32) {
-        self.phase.set_freq(freq, sample_rate);
+    pub fn set_freq(&mut self, freq: f32) {
+        self.phase.set_freq(freq);
     }
 }
 

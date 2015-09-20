@@ -18,8 +18,11 @@ use midi::Channel;
 use produce_audio::{ProduceAudioMut, ProduceAudio};
 use voice::Voice;
 
+// TODO: figure out how to retrieve this from the system
+const SAMPLE_RATE: u32 = 44_100;
+
 fn main() {
-    let mut voice = Voice::new();
+    let mut voice = Voice::new(SAMPLE_RATE);
 
     // create channel for updates
     let (send, recv) = mpsc::channel();

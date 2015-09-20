@@ -13,10 +13,10 @@ pub struct Voice {
 }
 
 impl Voice {
-    pub fn new() -> Self {
+    pub fn new(sample_rate: u32) -> Self {
         // create the parts of the signal chain
         let oscillators: Vec<_> = (0..8)
-            .map(|mult| Rc::new(RefCell::new(Oscillator::new(440.0 * ((mult + 1) as f32), 44_100))))
+            .map(|_| Rc::new(RefCell::new(Oscillator::new(sample_rate))))
             .collect();
 
 
@@ -46,7 +46,7 @@ impl Voice {
         let freq = Step(pitch).to_hz().hz();
         for (num, ref_osc) in self.oscillators.iter_mut().enumerate() {
             let mut oscillator = (**ref_osc).borrow_mut();
-            oscillator.set_freq(freq * ((num + 1) as f32), 44_100);
+            oscillator.set_freq(freq * ((num + 1) as f32));
         }
     }
 

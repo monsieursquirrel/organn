@@ -3,6 +3,7 @@
 extern crate coreaudio_rs as coreaudio;
 extern crate num;
 extern crate pitch_calc;
+extern crate midi;
 
 mod oscillator;
 mod mixer;
@@ -11,6 +12,8 @@ mod voice;
 
 use coreaudio::audio_unit::{AudioUnit, Type, SubType};
 use std::sync::mpsc;
+use midi::Message;
+use midi::Channel;
 
 use produce_audio::{ProduceAudioMut, ProduceAudio};
 use voice::Voice;
@@ -28,8 +31,8 @@ fn main() {
             loop {
                 let message = recv.try_recv();
                 match message {
-                    Ok(pitch) => {
-                        voice.set_pitch(pitch);
+                    Ok(midi_message) => {
+                        voice.midi_message(&midi_message);
                     }
                     Err(mpsc::TryRecvError::Empty) => {
                         break;
@@ -55,7 +58,7 @@ fn main() {
     let start_note = 33;
     for i in (0..6) {
         let note = start_note + (i * 12);
-        send.send(note as f32).unwrap();
+        send.send(Message::NoteOn(Channel::Ch1, note, 100)).unwrap();
         ::std::thread::sleep_ms(3000);
     }
 

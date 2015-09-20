@@ -5,6 +5,7 @@ use pitch_calc::Step;
 use produce_audio::{ProduceAudioMut, ProduceAudio};
 use oscillator::Oscillator;
 use mixer::Mixer;
+use midi::Message;
 
 pub struct Voice {
     oscillators: Vec<Rc<RefCell<Oscillator>>>,
@@ -46,6 +47,15 @@ impl Voice {
         for (num, ref_osc) in self.oscillators.iter_mut().enumerate() {
             let mut oscillator = (**ref_osc).borrow_mut();
             oscillator.set_freq(freq * ((num + 1) as f32), 44_100);
+        }
+    }
+
+    pub fn midi_message(&mut self, message: &Message) {
+        match *message {
+            Message::NoteOn(_, pitch, _) => {
+                self.set_pitch(pitch as f32);
+            }
+            _ => { }
         }
     }
 }

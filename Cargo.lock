@@ -3,6 +3,7 @@ name = "organn"
 version = "0.1.1"
 dependencies = [
  "coreaudio-rs 0.0.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "midi 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "num 0.1.27 (registry+https://github.com/rust-lang/crates.io-index)",
  "pitch_calc 0.9.7 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -37,6 +38,14 @@ dependencies = [
 name = "libc"
 version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "midi"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "num 0.1.27 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "num"

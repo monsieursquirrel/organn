@@ -10,11 +10,7 @@ mod mixer;
 mod produce_audio;
 
 use coreaudio::audio_unit::{AudioUnit, Type, SubType};
-use pitch_calc::{Step, Hz};
-use num::Float;
-use num::traits::Num;
-use std::f32::consts::PI;
-use itertools::Zip;
+use pitch_calc::Step;
 use std::sync::mpsc;
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -34,7 +30,7 @@ impl Voice {
 
 
         let borrowed_oscs: Vec<_> = oscillators.iter().map(|ref_osc| ref_osc.clone()).collect();
-        let mut mixer = mixer::Mixer::new(borrowed_oscs, vec![0.0; oscillators.len()]);
+        let mixer = mixer::Mixer::new(borrowed_oscs, vec![0.0; oscillators.len()]);
 
         // get all the components into a struct so they share lifetime
         let mut voice = Voice {
@@ -107,11 +103,11 @@ fn main() {
         .start()
         .unwrap();
 
-    let mut note = 33;
-    loop {
+    let start_note = 33;
+    for i in (0..6) {
+        let note = start_note + (i * 12);
+        send.send(note as f32).unwrap();
         ::std::thread::sleep_ms(3000);
-        note += 1;
-        send.send(note as f32);
     }
 
     audio_unit.close();

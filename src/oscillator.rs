@@ -1,5 +1,4 @@
 use num::Float;
-use num::traits::Num;
 use std::f32::consts::PI;
 use produce_audio::ProduceAudioMut;
 
@@ -25,7 +24,7 @@ impl PhaseIter {
     }
 
     fn set_freq(&mut self, freq: f32, sample_rate: u32) {
-        if (freq > 0.0) {
+        if freq > 0.0 {
             // try to avoid jumps in output by remapping the current position to the new loop len
             let new_len = Self::calc_loop(freq, sample_rate);
             let new_pos = (((self.pos as u64) * (new_len as u64)) / (self.loop_len as u64)) as u32;

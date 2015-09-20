@@ -61,7 +61,12 @@ impl<T> Env<T> where T: ProduceAudio {
 impl<T> ProduceAudioMut for Env<T> where T: ProduceAudio {
     fn next_sample(&mut self) -> f32 {
         self.update();
-        let gain = (self.pos as f32) / (self.ramp_samples as f32);
-        self.input.next_sample() * gain
+        match self.state {
+            State::Off => { 0.0 }
+            _ => {
+                let gain = (self.pos as f32) / (self.ramp_samples as f32);
+                self.input.next_sample() * gain
+            }
+        }
     }
 }

@@ -64,6 +64,8 @@ fn main() {
         let note = start_note + (i * 12);
         send.send(Message::NoteOn(Channel::Ch1, note, 100)).unwrap();
         ::std::thread::sleep_ms(3000);
+        send.send(Message::NoteOff(Channel::Ch1, note, 100)).unwrap();
+        ::std::thread::sleep_ms(1000);
     }
 
     audio_unit.close();

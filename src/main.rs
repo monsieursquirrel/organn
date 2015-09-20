@@ -22,7 +22,7 @@ use multi::Multi;
 const SAMPLE_RATE: u32 = 44_100;
 
 fn main() {
-    let mut multi = Multi::new(32, SAMPLE_RATE);
+    let mut multi = Multi::new(SAMPLE_RATE);
 
     // create channel for updates
     let (send, recv) = mpsc::channel();

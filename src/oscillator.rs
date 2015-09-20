@@ -1,6 +1,7 @@
 use num::Float;
 use num::traits::Num;
 use std::f32::consts::PI;
+use produce_audio::ProduceAudioMut;
 
 const SHIFT: f32 = (1 << 16) as f32;
 
@@ -24,11 +25,18 @@ impl PhaseIter {
     }
 
     fn set_freq(&mut self, freq: f32, sample_rate: u32) {
-        // try to avoid jumps in output by remapping the current position to the new loop len
-        let new_len = Self::calc_loop(freq, sample_rate);
-        let new_pos = (((self.pos as u64) * (new_len as u64)) / (self.loop_len as u64)) as u32;
-        self.loop_len = new_len;
-        self.pos = new_pos;
+        if (freq > 0.0) {
+            // try to avoid jumps in output by remapping the current position to the new loop len
+            let new_len = Self::calc_loop(freq, sample_rate);
+            let new_pos = (((self.pos as u64) * (new_len as u64)) / (self.loop_len as u64)) as u32;
+            self.loop_len = new_len;
+            self.pos = new_pos;
+        }
+        else {
+            // avoid divide by zero
+            self.loop_len = 1;
+            self.pos = 0;
+        }
     }
 }
 
@@ -55,8 +63,10 @@ impl Oscillator {
     pub fn set_freq(&mut self, freq: f32, sample_rate: u32) {
         self.phase.set_freq(freq, sample_rate);
     }
+}
 
-    pub fn get_sample(&mut self) -> f32 {
+impl ProduceAudioMut for Oscillator {
+    fn next_sample(&mut self) -> f32 {
         self.phase.next().unwrap().sin()
     }
 }

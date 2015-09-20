@@ -5,6 +5,10 @@ extern crate num;
 extern crate itertools;
 extern crate pitch_calc;
 
+mod oscillator;
+mod mixer;
+mod produce_audio;
+
 use coreaudio::audio_unit::{AudioUnit, Type, SubType};
 use pitch_calc::{Step, Hz};
 use num::Float;
@@ -12,28 +16,62 @@ use num::traits::Num;
 use std::f32::consts::PI;
 use itertools::Zip;
 use std::sync::mpsc;
+use std::cell::RefCell;
+use std::rc::Rc;
+use produce_audio::{ProduceAudioMut, ProduceAudio};
 
-mod oscillator;
-mod mixer;
+struct Voice {
+    oscillators: Vec<Rc<RefCell<oscillator::Oscillator>>>,
+    mixer: mixer::Mixer<Rc<RefCell<oscillator::Oscillator>>>
+}
+
+impl Voice {
+    fn new() -> Self {
+        // create the parts of the signal chain
+        let oscillators: Vec<_> = (0..8)
+            .map(|mult| Rc::new(RefCell::new(oscillator::Oscillator::new(440.0 * ((mult + 1) as f32), 44_100))))
+            .collect();
+
+
+        let borrowed_oscs: Vec<_> = oscillators.iter().map(|ref_osc| ref_osc.clone()).collect();
+        let mut mixer = mixer::Mixer::new(borrowed_oscs, vec![0.0; oscillators.len()]);
+
+        // get all the components into a struct so they share lifetime
+        let mut voice = Voice {
+            oscillators: oscillators,
+            mixer: mixer
+        };
+
+        // link the components together
+        voice.mixer.set_level(0, 0.5);
+        voice.mixer.set_level(1, 0.3);
+        voice.mixer.set_level(2, 0.05);
+        voice.mixer.set_level(3, 0.2);
+        voice.mixer.set_level(4, 0.05);
+        voice.mixer.set_level(5, 0.2);
+        voice.mixer.set_level(6, 0.05);
+        voice.mixer.set_level(7, 0.05);
+
+        voice
+    }
+
+    fn set_pitch(&mut self, pitch: f32) {
+        let freq = Step(pitch).to_hz().hz();
+        for (num, ref_osc) in self.oscillators.iter_mut().enumerate() {
+            let mut oscillator = (**ref_osc).borrow_mut();
+            oscillator.set_freq(freq * ((num + 1) as f32), 44_100);
+        }
+    }
+}
+
+impl ProduceAudioMut for Voice {
+    fn next_sample(&mut self) -> f32 {
+        self.mixer.next_sample()
+    }
+}
 
 fn main() {
-
-    // start oscillators on A (440hz)
-    let freq = Step(69.0).to_hz().hz();
-    // generate harmonics
-    let mut oscillators: Vec<_> = (0..8).map(|mult| oscillator::Oscillator::new(freq * ((mult + 1) as f32), 44_100)).collect();
-
-    // mix them
-    let mut mixer = mixer::Mixer::new(vec![0.0; oscillators.len()]);
-
-    mixer.set_level(0, 0.5);
-    mixer.set_level(1, 0.3);
-    mixer.set_level(2, 0.05);
-    mixer.set_level(3, 0.2);
-    mixer.set_level(4, 0.05);
-    mixer.set_level(5, 0.2);
-    mixer.set_level(6, 0.05);
-    mixer.set_level(7, 0.05);
+    let mut voice = Voice::new();
 
     // create channel for updates
     let (send, recv) = mpsc::channel();
@@ -46,11 +84,7 @@ fn main() {
                 let message = recv.try_recv();
                 match message {
                     Ok(pitch) => {
-                        // update pitch
-                        let freq = Step(pitch).to_hz().hz();
-                        for (num, oscillator) in oscillators.iter_mut().enumerate() {
-                            oscillator.set_freq(freq * ((num + 1) as f32), 44_100);
-                        }
+                        voice.set_pitch(pitch);
                     }
                     Err(mpsc::TryRecvError::Empty) => {
                         break;
@@ -63,8 +97,7 @@ fn main() {
             }
 
             for frame in (0..num_frames) {
-                let osc_outputs: Vec<_> = oscillators.iter_mut().map(|osc| osc.get_sample()).collect();
-                let sample = mixer.mix(&osc_outputs);
+                let sample = voice.next_sample();
                 for channel in buffer.iter_mut() {
                     channel[frame] = sample;
                 }
@@ -74,7 +107,7 @@ fn main() {
         .start()
         .unwrap();
 
-    let mut note = 21;
+    let mut note = 33;
     loop {
         ::std::thread::sleep_ms(3000);
         note += 1;
@@ -82,5 +115,4 @@ fn main() {
     }
 
     audio_unit.close();
-
 }

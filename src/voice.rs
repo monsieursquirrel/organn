@@ -1,28 +1,27 @@
-use std::cell::RefCell;
-use std::rc::Rc;
+
 use pitch_calc::Step;
 
-use basic_types::{ProduceAudioMut, ProduceAudio, UnthreadedConnection};
+use basic_types::unthreaded_connection;
 use oscillator::Oscillator;
 use mixer::Mixer;
 use env::Env;
 use midi::{self, Message};
 
 pub struct Voice {
-    oscillators: Vec<Oscillator<UnthreadedConnection::UnthreadedOutput>>,
-    mixer: Mixer<UnthreadedConnection::UnthreadedInput, UnthreadedConnection::UnthreadedOutput>,
-    env: Env<UnthreadedConnection::UnthreadedInput, UnthreadedConnection::UnthreadedOutput>,
+    oscillators: Vec<Oscillator<unthreaded_connection::UnthreadedOutput>>,
+    mixer: Mixer<unthreaded_connection::UnthreadedInput, unthreaded_connection::UnthreadedOutput>,
+    env: Env<unthreaded_connection::UnthreadedInput, unthreaded_connection::UnthreadedOutput>,
     pitch: midi::U7
 }
 
 impl Voice {
-    pub fn new(sample_rate: u32) -> (Self, UnthreadedConnection::UnthreadedInput) {
+    pub fn new(sample_rate: u32) -> (Self, unthreaded_connection::UnthreadedInput) {
         // create the parts of the signal chain
         let mut oscillators = Vec::new();
         let mut osc_connections = Vec::new();
 
         for _ in (0..8) {
-            let (output, input) = UnthreadedConnection::new();
+            let (output, input) = unthreaded_connection::new();
             let osc = Oscillator::new(sample_rate, output);
 
             oscillators.push(osc);
@@ -30,7 +29,7 @@ impl Voice {
         }
 
         let num_oscs = osc_connections.len();
-        let (mix_output, env_input) = UnthreadedConnection::new();
+        let (mix_output, env_input) = unthreaded_connection::new();
         let mut mixer = Mixer::new(osc_connections, vec![0.0; num_oscs], mix_output);
 
         mixer.set_level(0, 0.5);
@@ -42,7 +41,7 @@ impl Voice {
         mixer.set_level(6, 0.05);
         mixer.set_level(7, 0.05);
 
-        let (env_output, voice_connection) = UnthreadedConnection::new();
+        let (env_output, voice_connection) = unthreaded_connection::new();
 
         let env = Env::new(env_input, env_output, 20, sample_rate);
 

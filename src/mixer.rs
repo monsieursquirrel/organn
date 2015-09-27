@@ -1,4 +1,4 @@
-use basic_types::{ProduceAudio, ProduceAudioMut, Input, Output, BUFFER_SIZE, AudioBuffer};
+use basic_types::{Input, Output, BUFFER_SIZE, AudioBuffer};
 
 pub struct Mixer<T, U> where T: Input, U: Output {
     levels: Vec<f32>,

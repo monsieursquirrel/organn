@@ -21,7 +21,7 @@ pub trait Input {
 
 // unththreaded audio buffer
 
-pub mod UnthreadedConnection {
+pub mod unthreaded_connection {
     use std::cell::RefCell;
     use std::rc::Rc;
     use basic_types::{AudioBuffer, Output, Input};

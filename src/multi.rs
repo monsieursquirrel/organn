@@ -1,8 +1,6 @@
 // a combined set of voices
-use std::cell::RefCell;
-use std::rc::Rc;
 
-use basic_types::{ProduceAudio, ProduceAudioMut, UnthreadedConnection};
+use basic_types::unthreaded_connection;
 use voice::Voice;
 use mixer::Mixer;
 use midi::{self, Message};
@@ -24,12 +22,12 @@ impl VoiceAssign {
 
 pub struct Multi {
     voices: Vec<VoiceAssign>,
-    mixer: Mixer<UnthreadedConnection::UnthreadedInput, UnthreadedConnection::UnthreadedOutput>,
+    mixer: Mixer<unthreaded_connection::UnthreadedInput, unthreaded_connection::UnthreadedOutput>,
     last_voice: usize
 }
 
 impl Multi {
-    pub fn new(num_voices: usize, sample_rate: u32) -> (Self, UnthreadedConnection::UnthreadedInput) {
+    pub fn new(num_voices: usize, sample_rate: u32) -> (Self, unthreaded_connection::UnthreadedInput) {
 
         let mut voices = Vec::new();
         let mut voice_connections = Vec::new();
@@ -41,7 +39,7 @@ impl Multi {
             voice_connections.push(conn);
         }
 
-        let (output, input) = UnthreadedConnection::new();
+        let (output, input) = unthreaded_connection::new();
         let mixer = Mixer::new(voice_connections, vec![0.25; num_voices], output);
 
         let voice_assigns = voices.into_iter().map(|ref_voc| VoiceAssign::new(ref_voc)).collect();

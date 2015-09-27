@@ -2,16 +2,16 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use pitch_calc::Step;
 
-use basic_types::{ProduceAudioMut, ProduceAudio};
+use basic_types::{ProduceAudioMut, ProduceAudio, UnthreadedBuffer};
 use oscillator::Oscillator;
 use mixer::Mixer;
 use env::Env;
 use midi::{self, Message};
 
 pub struct Voice {
-    oscillators: Vec<Rc<RefCell<Oscillator>>>,
-    mixer: Rc<RefCell<Mixer<Rc<RefCell<Oscillator>>>>>,
-    env: Env<Rc<RefCell<Mixer<Rc<RefCell<Oscillator>>>>>>,
+    oscillators: Vec<Rc<RefCell<Oscillator<UnthreadedBuffer>>>>,
+    mixer: Rc<RefCell<Mixer<Rc<RefCell<Oscillator<UnthreadedBuffer>>>>>>,
+    env: Env<Rc<RefCell<Mixer<Rc<RefCell<Oscillator<UnthreadedBuffer>>>>>>>,
     pitch: midi::U7
 }
 
@@ -19,7 +19,10 @@ impl Voice {
     pub fn new(sample_rate: u32) -> Self {
         // create the parts of the signal chain
         let oscillators: Vec<_> = (0..8)
-            .map(|_| Rc::new(RefCell::new(Oscillator::new(sample_rate))))
+            .map(|_| {
+                let buf = UnthreadedBuffer::new();
+                Rc::new(RefCell::new(Oscillator::new(sample_rate, buf)))
+            })
             .collect();
 
 

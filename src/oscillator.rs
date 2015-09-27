@@ -1,6 +1,6 @@
 use num::Float;
 use std::f32::consts::PI;
-use basic_types::ProduceAudioMut;
+use basic_types::{ProduceAudioMut, Output, BUFFER_SIZE, AudioBuffer};
 
 const SHIFT: f32 = (1 << 16) as f32;
 
@@ -59,23 +59,33 @@ impl Iterator for PhaseIter {
     }
 }
 
-pub struct Oscillator {
-    phase: PhaseIter
+pub struct Oscillator<T> where T: Output {
+    phase: PhaseIter,
+    output: T
 }
 
-impl Oscillator {
-    pub fn new(sample_rate: u32) -> Self {
+impl<T> Oscillator<T> where T: Output {
+    pub fn new(sample_rate: u32, output: T) -> Self {
         Oscillator {
-            phase: PhaseIter::new(sample_rate, PI * 2.0)
+            phase: PhaseIter::new(sample_rate, PI * 2.0),
+            output: output
         }
     }
 
     pub fn set_freq(&mut self, freq: f32) {
         self.phase.set_freq(freq);
     }
+
+    pub fn run(&mut self) {
+        let mut samples: AudioBuffer = [0.0; BUFFER_SIZE];
+        for sample in samples.iter_mut() {
+            *sample = self.phase.next().unwrap().sin();
+        }
+        self.output.supply_audio(samples);
+    }
 }
 
-impl ProduceAudioMut for Oscillator {
+impl<T> ProduceAudioMut for Oscillator<T> where T: Output {
     fn next_sample(&mut self) -> f32 {
         self.phase.next().unwrap().sin()
     }

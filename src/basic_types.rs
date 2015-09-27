@@ -7,14 +7,14 @@ pub type AudioBuffer = [f32; BUFFER_SIZE];
 
 
 // audio connection traits, will eventually have threaded and unththreaded impls
-// not sure which way round these shoukd be named, currently Input puts audio into the buffer...
+// not sure which way round these shoukd be named, currently Output puts audio into the buffer...
 
-pub trait Input {
+pub trait Output {
     /// Write audio into the buffer
     fn supply_audio(&mut self, buffer: AudioBuffer);
 }
 
-pub trait Output {
+pub trait Input {
     /// Get audio out of the buffer
     fn get_audio(&mut self) -> AudioBuffer;
 }
@@ -33,13 +33,13 @@ impl UnthreadedBuffer {
     }
 }
 
-impl Input for UnthreadedBuffer {
+impl Output for UnthreadedBuffer {
     fn supply_audio(&mut self, buffer: AudioBuffer) {
         self.buffer = Some(buffer);
     }
 }
 
-impl Output for UnthreadedBuffer {
+impl Input for UnthreadedBuffer {
     fn get_audio(&mut self) -> AudioBuffer {
         self.buffer.take().unwrap()
     }

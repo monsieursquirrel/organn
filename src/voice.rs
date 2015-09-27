@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use pitch_calc::Step;
 
-use produce_audio::{ProduceAudioMut, ProduceAudio};
+use basic_types::{ProduceAudioMut, ProduceAudio};
 use oscillator::Oscillator;
 use mixer::Mixer;
 use env::Env;

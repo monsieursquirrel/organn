@@ -2,7 +2,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use produce_audio::{ProduceAudio, ProduceAudioMut};
+use basic_types::{ProduceAudio, ProduceAudioMut};
 use voice::Voice;
 use mixer::Mixer;
 use midi::{self, Message};

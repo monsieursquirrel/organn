@@ -1,6 +1,6 @@
 use num::Float;
 use std::f32::consts::PI;
-use produce_audio::ProduceAudioMut;
+use basic_types::ProduceAudioMut;
 
 const SHIFT: f32 = (1 << 16) as f32;
 

@@ -1,6 +1,6 @@
 // really simple envelope, short linear attack/release, mostly for preventing clicks
 
-use produce_audio::{ProduceAudio, ProduceAudioMut};
+use basic_types::{ProduceAudio, ProduceAudioMut};
 
 enum State {
     Off,

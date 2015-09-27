@@ -1,4 +1,4 @@
-use produce_audio::{ProduceAudio, ProduceAudioMut};
+use basic_types::{ProduceAudio, ProduceAudioMut};
 
 pub struct Mixer<T> where T: ProduceAudio {
     levels: Vec<f32>,

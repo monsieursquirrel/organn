@@ -3,7 +3,7 @@ extern crate num;
 extern crate pitch_calc;
 extern crate midi;
 
-mod produce_audio;
+mod basic_types;
 mod oscillator;
 mod mixer;
 mod env;
@@ -15,7 +15,7 @@ use std::sync::mpsc;
 use midi::Message;
 use midi::Channel;
 
-use produce_audio::{ProduceAudioMut, ProduceAudio};
+use basic_types::{ProduceAudioMut, ProduceAudio};
 use multi::Multi;
 
 // TODO: figure out how to retrieve this from the system

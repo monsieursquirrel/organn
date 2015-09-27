@@ -31,8 +31,8 @@ pub struct Multi {
 impl Multi {
     pub fn new(num_voices: usize, sample_rate: u32) -> (Self, UnthreadedConnection::UnthreadedInput) {
 
-        let voices = Vec::new();
-        let voice_connections = Vec::new();
+        let mut voices = Vec::new();
+        let mut voice_connections = Vec::new();
 
         for _ in (0..num_voices) {
             let (voice, conn) = Voice::new(sample_rate);
@@ -42,7 +42,7 @@ impl Multi {
         }
 
         let (output, input) = UnthreadedConnection::new();
-        let mixer = Mixer::new(voice_connections, vec![0.25; voice_connections.len()], output);
+        let mixer = Mixer::new(voice_connections, vec![0.25; num_voices], output);
 
         let voice_assigns = voices.into_iter().map(|ref_voc| VoiceAssign::new(ref_voc)).collect();
 

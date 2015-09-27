@@ -18,8 +18,8 @@ pub struct Voice {
 impl Voice {
     pub fn new(sample_rate: u32) -> (Self, UnthreadedConnection::UnthreadedInput) {
         // create the parts of the signal chain
-        let oscillators = Vec::new();
-        let osc_connections = Vec::new();
+        let mut oscillators = Vec::new();
+        let mut osc_connections = Vec::new();
 
         for _ in (0..8) {
             let (output, input) = UnthreadedConnection::new();
@@ -31,7 +31,7 @@ impl Voice {
 
         let num_oscs = osc_connections.len();
         let (mix_output, env_input) = UnthreadedConnection::new();
-        let mixer = Mixer::new(osc_connections, vec![0.0; num_oscs], mix_output);
+        let mut mixer = Mixer::new(osc_connections, vec![0.0; num_oscs], mix_output);
 
         mixer.set_level(0, 0.5);
         mixer.set_level(1, 0.3);
@@ -87,7 +87,7 @@ impl Voice {
 
     pub fn run(&mut self) {
         // just run every part of the audio chain in order
-        for osc in self.oscillators.iter() {
+        for osc in self.oscillators.iter_mut() {
             osc.run();
         }
         self.mixer.run();

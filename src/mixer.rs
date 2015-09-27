@@ -20,11 +20,15 @@ impl<T, U> Mixer<T, U> where T: Input, U: Output {
     }
 
     pub fn run(&mut self) {
-        let samples = self.inputs.iter()
-            .map(|input| input.get_audio())
-            .zip(self.levels.iter())
-            .map(|(buffer, level)| buffer.iter().map(|sample| sample * level).collect() )
-            .fold([0.0; BUFFER_SIZE], |buffer, outbuf| outbuf.iter().zip(buffer).map(|input, sum| input + sum).collect() );
+        let mut samples: AudioBuffer = [0.0; BUFFER_SIZE];
+
+        for input in self.inputs.iter() {
+            let in_samples = input.get_audio();
+            for (sample, in_sample) in samples.iter_mut().zip(in_samples.iter()) {
+                *sample += *in_sample;
+            }
+        }
+
         self.output.supply_audio(samples);
     }
 }

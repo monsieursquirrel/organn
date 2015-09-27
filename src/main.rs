@@ -15,17 +15,21 @@ use std::sync::mpsc;
 use midi::Message;
 use midi::Channel;
 
-use basic_types::{ProduceAudioMut, ProduceAudio};
+use basic_types::{ProduceAudioMut, ProduceAudio, BUFFER_SIZE, AudioBuffer, Input};
 use multi::Multi;
 
 // TODO: figure out how to retrieve this from the system
 const SAMPLE_RATE: u32 = 44_100;
 
 fn main() {
-    let mut multi = Multi::new(32, SAMPLE_RATE);
+    let (mut multi, audio_connection) = Multi::new(32, SAMPLE_RATE);
 
     // create channel for updates
     let (send, recv) = mpsc::channel();
+
+    // audio buffer and position
+    let mut buf: AudioBuffer = [0.0; BUFFER_SIZE];
+    let mut pos = BUFFER_SIZE;      // start at the end to trigger fetching audio
 
     // Construct an Output audio unit.
     let audio_unit = AudioUnit::new(Type::Output, SubType::HalOutput)
@@ -48,7 +52,12 @@ fn main() {
             }
 
             for frame in (0..num_frames) {
-                let sample = multi.next_sample();
+                if (pos >= buf.len()) {
+                    buf = audio_connection.get_audio();
+                    pos = 0;
+                }
+                let sample = buf[pos];
+                pos += 1;
                 for channel in buffer.iter_mut() {
                     channel[frame] = sample;
                 }

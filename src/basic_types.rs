@@ -21,7 +21,7 @@ pub trait Input {
 
 // unththreaded audio buffer
 
-mod UnthreadedConnection {
+pub mod UnthreadedConnection {
     use std::cell::RefCell;
     use std::rc::Rc;
     use basic_types::{AudioBuffer, Output, Input};
@@ -48,7 +48,7 @@ mod UnthreadedConnection {
 
     impl Output for UnthreadedOutput {
         fn supply_audio(&self, buffer: AudioBuffer) {
-            let inner_buf = self.buffer.borrow_mut();
+            let mut inner_buf = self.buffer.borrow_mut();
             *inner_buf = Some(buffer);
         }
     }

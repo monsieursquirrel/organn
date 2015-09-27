@@ -1,6 +1,6 @@
 // really simple envelope, short linear attack/release, mostly for preventing clicks
 
-use basic_types::{ProduceAudio, ProduceAudioMut, Input, Output};
+use basic_types::{ProduceAudio, ProduceAudioMut, Input, Output, BUFFER_SIZE, AudioBuffer};
 
 enum State {
     Off,
@@ -59,14 +59,14 @@ impl<T, U> Env<T, U> where T: Input, U: Output {
         }
     }
 
-    fn run(&mut self) {
-        let samples = self.input.get_audio().iter()
-            .map(|sample| {
-                self.update();
-                let gain = (self.pos as f32) / (self.ramp_samples as f32);
-                sample * gain
-            })
-            .collect();
+    pub fn run(&mut self) {
+        let mut samples: AudioBuffer = [0.0; BUFFER_SIZE];
+
+        let in_samples = self.input.get_audio();
+        for (sample, in_sample) in samples.iter_mut().zip(in_samples.iter()) {
+            *sample += *in_sample;
+        }
+
         self.output.supply_audio(samples);
     }
 }

@@ -84,9 +84,3 @@ impl<T> Oscillator<T> where T: Output {
         self.output.supply_audio(samples);
     }
 }
-
-impl<T> ProduceAudioMut for Oscillator<T> where T: Output {
-    fn next_sample(&mut self) -> f32 {
-        self.phase.next().unwrap().sin()
-    }
-}

@@ -2,19 +2,19 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use basic_types::{ProduceAudio, ProduceAudioMut};
+use basic_types::{ProduceAudio, ProduceAudioMut, UnthreadedConnection};
 use voice::Voice;
 use mixer::Mixer;
 use midi::{self, Message};
 
 // voices with note assignments
 struct VoiceAssign {
-    voice: Rc<RefCell<Voice>>,
+    voice: Voice,
     note: Option<midi::U7>,
 }
 
 impl VoiceAssign {
-    fn new(voice: Rc<RefCell<Voice>>) -> Self {
+    fn new(voice: Voice) -> Self {
         VoiceAssign {
             voice: voice,
             note: None
@@ -24,26 +24,36 @@ impl VoiceAssign {
 
 pub struct Multi {
     voices: Vec<VoiceAssign>,
-    mixer: Mixer<Rc<RefCell<Voice>>>,
+    mixer: Mixer<UnthreadedConnection::UnthreadedInput, UnthreadedConnection::UnthreadedOutput>,
     last_voice: usize
 }
 
 impl Multi {
-    pub fn new(num_voices: usize, sample_rate: u32) -> Self {
-        let voices: Vec<_> = (0..num_voices)
-            .map(|_| Rc::new(RefCell::new(Voice::new(sample_rate))) )
-            .collect();
+    pub fn new(num_voices: usize, sample_rate: u32) -> (Self, UnthreadedConnection::UnthreadedInput) {
 
-        let voice_refs = voices.iter().map(|ref_voc| ref_voc.clone()).collect();
-        let mixer = Mixer::new(voice_refs, vec![0.25; voices.len()]);
+        let voices = Vec::new();
+        let voice_connections = Vec::new();
+
+        for _ in (0..num_voices) {
+            let (voice, conn) = Voice::new(sample_rate);
+
+            voices.push(voice);
+            voice_connections.push(conn);
+        }
+
+        let (output, input) = UnthreadedConnection::new();
+        let mixer = Mixer::new(voice_connections, vec![0.25; voice_connections.len()], output);
 
         let voice_assigns = voices.into_iter().map(|ref_voc| VoiceAssign::new(ref_voc)).collect();
 
-        Multi {
-            voices: voice_assigns,
-            mixer: mixer,
-            last_voice: 0
-        }
+        (
+            Multi {
+                voices: voice_assigns,
+                mixer: mixer,
+                last_voice: 0
+            },
+            input
+        )
     }
 
     fn pick_voice(&mut self) -> &mut VoiceAssign {
@@ -65,14 +75,14 @@ impl Multi {
                 // pick a voice to use
                 let mut voice = self.pick_voice();
                 voice.note = Some(pitch);
-                voice.voice.borrow_mut().midi_message(message);
+                voice.voice.midi_message(message);
             }
 
             Message::NoteOff(_, pitch, _) => {
                 // send to appropriate voice(s) and unassign their notes
                 for voice in self.voices.iter_mut().filter(|v| v.note == Some(pitch)) {
                     voice.note = None;
-                    voice.voice.borrow_mut().midi_message(message);
+                    voice.voice.midi_message(message);
                 }
             }
 
@@ -80,11 +90,5 @@ impl Multi {
                 // send to everything!
             }
         }
-    }
-}
-
-impl ProduceAudioMut for Multi {
-    fn next_sample(&mut self) -> f32 {
-        self.mixer.next_sample()
     }
 }

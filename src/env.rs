@@ -1,6 +1,6 @@
 // really simple envelope, short linear attack/release, mostly for preventing clicks
 
-use basic_types::{ProduceAudio, ProduceAudioMut};
+use basic_types::{ProduceAudio, ProduceAudioMut, Input, Output};
 
 enum State {
     Off,
@@ -9,17 +9,19 @@ enum State {
     Down
 }
 
-pub struct Env<T> where T: ProduceAudio {
+pub struct Env<T, U> where T: Input, U: Output {
     input: T,
+    output: U,
     state: State,
     pos: u32,
     ramp_samples: u32,
 }
 
-impl<T> Env<T> where T: ProduceAudio {
-    pub fn new(input: T, time_ms: u32, sample_rate: u32) -> Self {
+impl<T, U> Env<T, U> where T: Input, U: Output {
+    pub fn new(input: T, output: U, time_ms: u32, sample_rate: u32) -> Self {
         Env {
             input: input,
+            output: output,
             state: State::Off,
             pos: 0,
             ramp_samples: (time_ms * sample_rate) / 1000
@@ -56,17 +58,15 @@ impl<T> Env<T> where T: ProduceAudio {
             _ => {}
         }
     }
-}
 
-impl<T> ProduceAudioMut for Env<T> where T: ProduceAudio {
-    fn next_sample(&mut self) -> f32 {
-        self.update();
-        match self.state {
-            State::Off => { 0.0 }
-            _ => {
+    fn run(&mut self) {
+        let samples = self.input.get_audio().iter()
+            .map(|sample| {
+                self.update();
                 let gain = (self.pos as f32) / (self.ramp_samples as f32);
-                self.input.next_sample() * gain
-            }
-        }
+                sample * gain
+            })
+            .collect();
+        self.output.supply_audio(samples);
     }
 }

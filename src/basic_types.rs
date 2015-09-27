@@ -11,37 +11,52 @@ pub type AudioBuffer = [f32; BUFFER_SIZE];
 
 pub trait Output {
     /// Write audio into the buffer
-    fn supply_audio(&mut self, buffer: AudioBuffer);
+    fn supply_audio(&self, buffer: AudioBuffer);
 }
 
 pub trait Input {
     /// Get audio out of the buffer
-    fn get_audio(&mut self) -> AudioBuffer;
+    fn get_audio(&self) -> AudioBuffer;
 }
 
 // unththreaded audio buffer
 
-pub struct UnthreadedBuffer {
-    buffer: Option<AudioBuffer>
-}
+mod UnthreadedConnection {
+    use std::cell::RefCell;
+    use std::rc::Rc;
+    use basic_types::{AudioBuffer, Output, Input};
 
-impl UnthreadedBuffer {
-    pub fn new() -> Self {
-        UnthreadedBuffer {
-            buffer: None
+    pub struct UnthreadedOutput {
+        buffer: Rc<RefCell<Option<AudioBuffer>>>
+    }
+
+    pub struct UnthreadedInput {
+        buffer: Rc<RefCell<Option<AudioBuffer>>>
+    }
+
+    pub fn new() -> (UnthreadedOutput, UnthreadedInput) {
+        let inner_buf = Rc::new(RefCell::new(None));
+        (
+        UnthreadedOutput {
+            buffer: inner_buf.clone()
+        },
+        UnthreadedInput {
+            buffer: inner_buf.clone()
+        }
+        )
+    }
+
+    impl Output for UnthreadedOutput {
+        fn supply_audio(&self, buffer: AudioBuffer) {
+            let inner_buf = self.buffer.borrow_mut();
+            *inner_buf = Some(buffer);
         }
     }
-}
 
-impl Output for UnthreadedBuffer {
-    fn supply_audio(&mut self, buffer: AudioBuffer) {
-        self.buffer = Some(buffer);
-    }
-}
-
-impl Input for UnthreadedBuffer {
-    fn get_audio(&mut self) -> AudioBuffer {
-        self.buffer.take().unwrap()
+    impl Input for UnthreadedInput {
+        fn get_audio(&self) -> AudioBuffer {
+            self.buffer.borrow_mut().take().unwrap()
+        }
     }
 }
 

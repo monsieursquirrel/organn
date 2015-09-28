@@ -89,4 +89,11 @@ impl Multi {
             }
         }
     }
+
+    pub fn run(&mut self) {
+        for voice in self.voices.iter_mut() {
+            voice.voice.run();
+        }
+        self.mixer.run();
+    }
 }

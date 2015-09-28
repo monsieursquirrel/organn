@@ -22,7 +22,7 @@ use multi::Multi;
 const SAMPLE_RATE: u32 = 44_100;
 
 fn main() {
-    let (mut multi, audio_connection) = Multi::new(1, SAMPLE_RATE);
+    let (mut multi, audio_connection) = Multi::new(32, SAMPLE_RATE);
 
     // create channel for updates
     let (send, recv) = mpsc::channel();

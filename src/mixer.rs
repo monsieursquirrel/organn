@@ -22,10 +22,10 @@ impl<T, U> Mixer<T, U> where T: Input, U: Output {
     pub fn run(&mut self) {
         let mut samples: AudioBuffer = [0.0; BUFFER_SIZE];
 
-        for input in self.inputs.iter() {
+        for (input, level) in self.inputs.iter().zip(self.levels.iter()) {
             let in_samples = input.get_audio();
             for (sample, in_sample) in samples.iter_mut().zip(in_samples.iter()) {
-                *sample += *in_sample;
+                *sample += *in_sample * level;
             }
         }
 

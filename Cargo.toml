@@ -8,3 +8,6 @@ coreaudio-rs = "0.0.6"
 num = "0.1.27"
 pitch_calc = "0.9.7"
 midi = "0.1.0"
+
+[dependencies.midi_wrap]
+path = "lib/midi_wrap"

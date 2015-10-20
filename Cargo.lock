@@ -4,8 +4,17 @@ version = "0.2.0"
 dependencies = [
  "coreaudio-rs 0.0.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "midi 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "midi_wrap 0.1.0",
  "num 0.1.27 (registry+https://github.com/rust-lang/crates.io-index)",
  "pitch_calc 0.9.7 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "CoreFoundation-sys"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "libc 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -45,6 +54,15 @@ version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "num 0.1.27 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "midi_wrap"
+version = "0.1.0"
+dependencies = [
+ "CoreFoundation-sys 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)",
+ "midi 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

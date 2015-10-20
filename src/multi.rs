@@ -1,6 +1,7 @@
 // a combined set of voices
 
 use basic_types::unthreaded_connection;
+use basic_types::threaded_connection;
 use voice::Voice;
 use mixer::Mixer;
 use midi::{self, Message};
@@ -22,7 +23,7 @@ impl VoiceAssign {
 
 pub struct Multi {
     voices: Vec<VoiceAssign>,
-    mixer: Mixer<unthreaded_connection::UnthreadedInput, unthreaded_connection::UnthreadedOutput>,
+    mixer: Mixer<threaded_connection::ThreadedInput, unthreaded_connection::UnthreadedOutput>,
     last_voice: usize
 }
 

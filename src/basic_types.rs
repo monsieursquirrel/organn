@@ -56,3 +56,28 @@ pub mod unthreaded_connection {
         }
     }
 }
+
+
+pub mod threaded_connection {
+    use std::sync::mpsc::{SyncSender, Receiver, sync_channel};
+    use basic_types::{AudioBuffer, Output, Input};
+
+    pub type ThreadedOutput = SyncSender<AudioBuffer>;
+    pub type ThreadedInput = Receiver<AudioBuffer>;
+
+    pub fn new() -> (ThreadedOutput, ThreadedInput) {
+        sync_channel(1)
+    }
+
+    impl Output for ThreadedOutput {
+        fn supply_audio(&self, buffer: AudioBuffer) {
+            self.send(buffer);
+        }
+    }
+
+    impl Input for ThreadedInput {
+        fn get_audio(&self) -> AudioBuffer {
+            self.recv().unwrap()
+        }
+    }
+}

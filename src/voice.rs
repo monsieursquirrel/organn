@@ -1,6 +1,7 @@
 
 use pitch_calc::Step;
 
+use basic_types::threaded_connection;
 use basic_types::unthreaded_connection;
 use oscillator::Oscillator;
 use mixer::Mixer;
@@ -10,12 +11,12 @@ use midi::{self, Message};
 pub struct Voice {
     oscillators: Vec<Oscillator<unthreaded_connection::UnthreadedOutput>>,
     mixer: Mixer<unthreaded_connection::UnthreadedInput, unthreaded_connection::UnthreadedOutput>,
-    env: Env<unthreaded_connection::UnthreadedInput, unthreaded_connection::UnthreadedOutput>,
+    env: Env<unthreaded_connection::UnthreadedInput, threaded_connection::ThreadedOutput>,
     pitch: midi::U7
 }
 
 impl Voice {
-    pub fn new(sample_rate: u32) -> (Self, unthreaded_connection::UnthreadedInput) {
+    pub fn new(sample_rate: u32) -> (Self, threaded_connection::ThreadedInput) {
         // create the parts of the signal chain
         let mut oscillators = Vec::new();
         let mut osc_connections = Vec::new();
@@ -41,7 +42,7 @@ impl Voice {
         mixer.set_level(6, 0.05);
         mixer.set_level(7, 0.05);
 
-        let (env_output, voice_connection) = unthreaded_connection::new();
+        let (env_output, voice_connection) = threaded_connection::new();
 
         let env = Env::new(env_input, env_output, 20, sample_rate);
 
@@ -56,7 +57,7 @@ impl Voice {
         )
     }
 
-    pub fn set_pitch(&mut self, pitch: f32) {
+    fn set_pitch(&mut self, pitch: f32) {
         let freq = Step(pitch).to_hz().hz();
         for (num, oscillator) in self.oscillators.iter_mut().enumerate() {
             oscillator.set_freq(freq * ((num + 1) as f32));

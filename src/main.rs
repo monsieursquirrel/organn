@@ -2,6 +2,7 @@ extern crate coreaudio_rs as coreaudio;
 extern crate num;
 extern crate pitch_calc;
 extern crate midi;
+extern crate midi_wrap;
 
 mod basic_types;
 mod oscillator;
@@ -10,10 +11,13 @@ mod env;
 mod voice;
 mod multi;
 
+use midi_wrap::MidiWrap;
+
 use coreaudio::audio_unit::{AudioUnit, Type, SubType};
 use std::sync::mpsc;
 use midi::Message;
 use midi::Channel;
+use std::io;
 
 use basic_types::{BUFFER_SIZE, AudioBuffer, Input};
 use multi::Multi;
@@ -26,6 +30,9 @@ fn main() {
 
     // create channel for updates
     let (send, recv) = mpsc::channel();
+
+    // accept midi input
+    let midi_in = MidiWrap::new("organn", "input", |midi| { send.send(midi); });
 
     // audio buffer and position
     let mut buf: AudioBuffer = [0.0; BUFFER_SIZE];
@@ -68,35 +75,9 @@ fn main() {
         .start()
         .unwrap();
 
-    let start_note = 33;
-    for i in (0..6) {
-        let note = start_note + (i * 12);
-        send.send(Message::NoteOn(Channel::Ch1, note, 100)).unwrap();
-        ::std::thread::sleep_ms(3000);
-        send.send(Message::NoteOff(Channel::Ch1, note, 100)).unwrap();
-        ::std::thread::sleep_ms(1000);
-    }
-
-    let start_note = 45;
-    for i in (0..7) {
-        let note = start_note + (i * 2);
-        send.send(Message::NoteOn(Channel::Ch1, note,      100)).unwrap();
-        send.send(Message::NoteOn(Channel::Ch1, note + 4,  100)).unwrap();
-        send.send(Message::NoteOn(Channel::Ch1, note + 7,  100)).unwrap();
-        for _ in (0..6) {
-            for j in (0..3) {
-                let top_note = note + 12 + (j * 12);
-                send.send(Message::NoteOn(Channel::Ch1, top_note, 100)).unwrap();
-                ::std::thread::sleep_ms(150);
-                send.send(Message::NoteOff(Channel::Ch1, top_note, 100)).unwrap();
-            }
-        }
-
-        send.send(Message::NoteOff(Channel::Ch1, note,      100)).unwrap();
-        send.send(Message::NoteOff(Channel::Ch1, note + 4,  100)).unwrap();
-        send.send(Message::NoteOff(Channel::Ch1, note + 7,  100)).unwrap();
-        ::std::thread::sleep_ms(1000);
-    }
+    let mut wait_str = String::new();
+    io::stdin().read_line(&mut wait_str);
 
     audio_unit.close();
+    drop(midi_in);
 }

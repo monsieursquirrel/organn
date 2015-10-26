@@ -76,8 +76,15 @@ impl MultiMidiConn {
                 }
             }
 
+            Message::ControlChange(_, _, _) => {
+                // send to all voices
+                for voice in self.voices.iter() {
+                    voice.voice.send(message.clone());
+                }
+            }
+
             _ => {
-                // TODO: send to everything!
+                // ignore
             }
         }
     }

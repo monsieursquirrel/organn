@@ -10,6 +10,8 @@ use midi::{self, Message};
 
 use std::sync::mpsc;
 
+static MIX_MAX: f32 = 0.25;
+
 pub struct Voice {
     oscillators: Vec<Oscillator<unthreaded_connection::UnthreadedOutput>>,
     mixer: Mixer<unthreaded_connection::UnthreadedInput, unthreaded_connection::UnthreadedOutput>,
@@ -36,14 +38,14 @@ impl Voice {
         let (mix_output, env_input) = unthreaded_connection::new();
         let mut mixer = Mixer::new(osc_connections, vec![0.0; num_oscs], mix_output);
 
-        mixer.set_level(0, 0.5);
-        mixer.set_level(1, 0.3);
-        mixer.set_level(2, 0.05);
-        mixer.set_level(3, 0.2);
-        mixer.set_level(4, 0.05);
-        mixer.set_level(5, 0.2);
-        mixer.set_level(6, 0.05);
-        mixer.set_level(7, 0.05);
+        mixer.set_level(0, 1.0 * MIX_MAX);
+        mixer.set_level(1, 0.6 * MIX_MAX);
+        mixer.set_level(2, 0.1 * MIX_MAX);
+        mixer.set_level(3, 0.4 * MIX_MAX);
+        mixer.set_level(4, 0.1 * MIX_MAX);
+        mixer.set_level(5, 0.4 * MIX_MAX);
+        mixer.set_level(6, 0.1 * MIX_MAX);
+        mixer.set_level(7, 0.1 * MIX_MAX);
 
         let env = Env::new(env_input, output, 20, sample_rate);
 
@@ -63,6 +65,28 @@ impl Voice {
         }
     }
 
+    // convert a midi value to a mix level
+    // reversed to resemble drawbars
+    fn midi_to_mix_level(value: midi::U7) -> f32 {
+        ((127 - value) as f32 * MIX_MAX) / 127.0
+    }
+
+    fn midi_control(&mut self, control: midi::U7, value: midi::U7) {
+        // map some midi controls to the mix
+        match control {
+            2  => { self.mixer.set_level(0, Self::midi_to_mix_level(value)); }
+            3  => { self.mixer.set_level(1, Self::midi_to_mix_level(value)); }
+            4  => { self.mixer.set_level(2, Self::midi_to_mix_level(value)); }
+            5  => { self.mixer.set_level(3, Self::midi_to_mix_level(value)); }
+            6  => { self.mixer.set_level(4, Self::midi_to_mix_level(value)); }
+            8  => { self.mixer.set_level(5, Self::midi_to_mix_level(value)); }
+            9  => { self.mixer.set_level(6, Self::midi_to_mix_level(value)); }
+            12 => { self.mixer.set_level(7, Self::midi_to_mix_level(value)); }
+            _ => {}
+        }
+
+    }
+
     fn midi_message(&mut self, message: &Message) {
         match *message {
             Message::NoteOn(_, pitch, _) => {
@@ -78,6 +102,10 @@ impl Voice {
 
             Message::AllNotesOff(_) => {
                 self.env.note_off();
+            }
+
+            Message::ControlChange(_, control, value) => {
+                self.midi_control(control, value);
             }
 
             _ => { }

@@ -7,6 +7,7 @@ use mixer::Mixer;
 use midi::{self, Message};
 
 use std::sync::mpsc;
+use std::thread;
 
 // voice inputs with note assignments
 struct VoiceAssign {
@@ -83,23 +84,40 @@ impl MultiMidiConn {
 }
 
 pub struct Multi {
-    voices: Vec<Voice>,
+    voice_threads: Vec<thread::JoinHandle<()>>,
     mixer: Mixer<threaded_connection::ThreadedInput, unthreaded_connection::UnthreadedOutput>,
 }
 
 impl Multi {
     pub fn new(num_voices: usize, sample_rate: u32) -> (Self, MultiMidiConn, unthreaded_connection::UnthreadedInput) {
 
-        let mut voices = Vec::new();
+        let mut voice_threads = Vec::new();
         let mut midi_connections = Vec::new();
         let mut voice_connections = Vec::new();
 
-        for _ in (0..num_voices) {
-            let (voice, midi_conn, conn) = Voice::new(sample_rate);
+        // spawn voice threads
+        for _ in (0..4) {
+            let mut voices = Vec::new();
 
-            voices.push(voice);
-            midi_connections.push(midi_conn);
-            voice_connections.push(conn);
+            for _ in (0..(num_voices / 4)) {
+                let (voice, midi_conn, conn) = Voice::new(sample_rate);
+
+                voices.push(voice);
+                midi_connections.push(midi_conn);
+                voice_connections.push(conn);
+            }
+
+            let thread = thread::spawn(move || {
+                    loop {
+                        for voice in voices.iter_mut() {
+                            if (voice.run().err()) {
+                                return;
+                            }
+                        }
+                    }
+                });
+
+            voice_threads.push(thread);
         }
 
         let midi_conn = MultiMidiConn::new(midi_connections);
@@ -109,7 +127,7 @@ impl Multi {
 
         (
             Multi {
-                voices: voices,
+                voice_threads: voice_threads,
                 mixer: mixer
             },
             midi_conn,
@@ -118,9 +136,6 @@ impl Multi {
     }
 
     pub fn run(&mut self) {
-        for voice in self.voices.iter_mut() {
-            voice.run();
-        }
         self.mixer.run();
     }
 }

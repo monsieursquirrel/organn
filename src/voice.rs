@@ -19,7 +19,7 @@ pub struct Voice {
 }
 
 impl Voice {
-    pub fn new(sample_rate: u32) -> (Self, mpsc::Sender<midi::Message>, threaded_connection::ThreadedInput) {
+    pub fn new(sample_rate: u32, midi_in: mpsc::Receiver<midi::Message>, output: threaded_connection::ThreadedOutput) -> Self {
         // create the parts of the signal chain
         let mut oscillators = Vec::new();
         let mut osc_connections = Vec::new();
@@ -45,23 +45,15 @@ impl Voice {
         mixer.set_level(6, 0.05);
         mixer.set_level(7, 0.05);
 
-        let (env_output, voice_connection) = threaded_connection::new();
+        let env = Env::new(env_input, output, 20, sample_rate);
 
-        let env = Env::new(env_input, env_output, 20, sample_rate);
-
-        let (midi_connection, midi_input) = mpsc::channel();
-
-        (
-            Voice {
-                oscillators: oscillators,
-                mixer: mixer,
-                env: env,
-                pitch: 0,
-                midi_input: midi_input
-            },
-            midi_connection,
-            voice_connection
-        )
+        Voice {
+            oscillators: oscillators,
+            mixer: mixer,
+            env: env,
+            pitch: 0,
+            midi_input: midi_in
+        }
     }
 
     fn set_pitch(&mut self, pitch: f32) {

@@ -1,7 +1,7 @@
 # organn
 
 An attempt at something resembling a drawbar organ. Largely an experiment in audio coding, ffi etc.
-It's playable using midi and sounds something like [this](https://soundcloud.com/whatmilk/organn-v030).
+It's playable using midi and sounds something like [this](https://soundcloud.com/whatmilk/organn-v040).
 The drawbar controls are mapped to midi cc numbers 2, 3, 4, 5, 6, 8, 9, 12 and 13.
 These were chosen because I had a nanoKontrol to hand and that's the default mapping.
 

@@ -110,7 +110,7 @@ impl Multi {
             let thread = thread::spawn(move || {
                     loop {
                         for voice in voices.iter_mut() {
-                            if (voice.run().err()) {
+                            if (voice.run().is_err()) {
                                 return;
                             }
                         }

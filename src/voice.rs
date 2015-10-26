@@ -26,7 +26,7 @@ impl Voice {
         let mut oscillators = Vec::new();
         let mut osc_connections = Vec::new();
 
-        for _ in (0..8) {
+        for _ in (0..9) {
             let (output, input) = unthreaded_connection::new();
             let osc = Oscillator::new(sample_rate, output);
 
@@ -46,6 +46,7 @@ impl Voice {
         mixer.set_level(5, 0.4 * MIX_MAX);
         mixer.set_level(6, 0.1 * MIX_MAX);
         mixer.set_level(7, 0.1 * MIX_MAX);
+        mixer.set_level(8, 0.1 * MIX_MAX);
 
         let env = Env::new(env_input, output, 20, sample_rate);
 
@@ -60,9 +61,15 @@ impl Voice {
 
     fn set_pitch(&mut self, pitch: f32) {
         let freq = Step(pitch).to_hz().hz();
-        for (num, oscillator) in self.oscillators.iter_mut().enumerate() {
-            oscillator.set_freq(freq * ((num + 1) as f32));
-        }
+        self.oscillators[0].set_freq((freq * 1.0 )  / 2.0);
+        self.oscillators[1].set_freq((freq * 16.0)  / 11.0);
+        self.oscillators[2].set_freq(freq * 1.0);
+        self.oscillators[3].set_freq(freq * 2.0);
+        self.oscillators[4].set_freq(freq * 3.0);
+        self.oscillators[5].set_freq(freq * 4.0);
+        self.oscillators[6].set_freq(freq * 5.0);
+        self.oscillators[7].set_freq(freq * 6.0);
+        self.oscillators[8].set_freq(freq * 8.0);
     }
 
     // convert a midi value to a mix level
@@ -82,6 +89,7 @@ impl Voice {
             8  => { self.mixer.set_level(5, Self::midi_to_mix_level(value)); }
             9  => { self.mixer.set_level(6, Self::midi_to_mix_level(value)); }
             12 => { self.mixer.set_level(7, Self::midi_to_mix_level(value)); }
+            13 => { self.mixer.set_level(8, Self::midi_to_mix_level(value)); }
             _ => {}
         }
 

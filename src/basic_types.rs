@@ -19,12 +19,41 @@ pub trait Input {
 // unththreaded audio buffer
 
 pub mod unthreaded_connection {
-    use basic_types::threaded_connection;
-    pub type UnthreadedInput = threaded_connection::ThreadedInput;
-    pub type UnthreadedOutput = threaded_connection::ThreadedOutput;
+    use std::cell::RefCell;
+    use std::rc::Rc;
+    use basic_types::{AudioBuffer, Output, Input};
+
+    pub struct UnthreadedOutput {
+        buffer: Rc<RefCell<Option<AudioBuffer>>>
+    }
+
+    pub struct UnthreadedInput {
+        buffer: Rc<RefCell<Option<AudioBuffer>>>
+    }
 
     pub fn new() -> (UnthreadedOutput, UnthreadedInput) {
-        threaded_connection::new()
+        let inner_buf = Rc::new(RefCell::new(None));
+        (
+        UnthreadedOutput {
+            buffer: inner_buf.clone()
+        },
+        UnthreadedInput {
+            buffer: inner_buf.clone()
+        }
+        )
+    }
+
+    impl Output for UnthreadedOutput {
+        fn supply_audio(&self, buffer: AudioBuffer) {
+            let mut inner_buf = self.buffer.borrow_mut();
+            *inner_buf = Some(buffer);
+        }
+    }
+
+    impl Input for UnthreadedInput {
+        fn get_audio(&self) -> AudioBuffer {
+            self.buffer.borrow_mut().take().unwrap()
+        }
     }
 }
 

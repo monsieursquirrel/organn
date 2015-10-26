@@ -62,7 +62,7 @@ impl Voice {
     fn set_pitch(&mut self, pitch: f32) {
         let freq = Step(pitch).to_hz().hz();
         self.oscillators[0].set_freq((freq * 1.0 )  / 2.0);
-        self.oscillators[1].set_freq((freq * 16.0)  / 11.0);
+        self.oscillators[1].set_freq((freq * 3.0)  / 2.0);
         self.oscillators[2].set_freq(freq * 1.0);
         self.oscillators[3].set_freq(freq * 2.0);
         self.oscillators[4].set_freq(freq * 3.0);

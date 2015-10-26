@@ -96,17 +96,25 @@ pub struct Multi {
 }
 
 impl Multi {
-    pub fn new(num_voices: usize, sample_rate: u32) -> (Self, MultiMidiConn, unthreaded_connection::UnthreadedInput) {
+    pub fn new(num_voices: usize, num_threads: usize, sample_rate: u32) -> (Self, MultiMidiConn, unthreaded_connection::UnthreadedInput) {
 
         let mut voice_threads = Vec::new();
         let mut midi_connections = Vec::new();
         let mut voice_connections = Vec::new();
 
         // spawn voice threads
-        for _ in (0..4) {
+        for i in (0..num_threads) {
             let mut voice_io = Vec::new();
 
-            for _ in (0..(num_voices / 4)) {
+            // thread 0 gets extra voices if (num_voices / num_threads) has a remainder
+            let voices_for_thread = if (i != 0) {
+                (num_voices / num_threads)
+            }
+            else {
+                (num_voices / num_threads) + (num_voices % num_threads)
+            };
+
+            for _ in (0..voices_for_thread) {
                 let (midi_connection, midi_input) = mpsc::channel();
                 let (voice_output, conn) = threaded_connection::new();
                 voice_io.push((midi_input, voice_output));

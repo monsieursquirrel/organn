@@ -26,7 +26,7 @@ use multi::Multi;
 const SAMPLE_RATE: u32 = 44_100;
 
 fn main() {
-    let (mut multi, mut midi_conn, audio_connection) = Multi::new(32, SAMPLE_RATE);
+    let (mut multi, mut midi_conn, audio_connection) = Multi::new(32, 4, SAMPLE_RATE);
 
     // accept midi input
     let midi_in = MidiWrap::new("organn", "input", move |midi| { midi_conn.midi_message(&midi); });

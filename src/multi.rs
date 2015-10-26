@@ -107,12 +107,13 @@ impl Multi {
             let mut voice_io = Vec::new();
 
             // thread 0 gets extra voices if (num_voices / num_threads) has a remainder
-            let voices_for_thread = if (i != 0) {
-                (num_voices / num_threads)
-            }
-            else {
-                (num_voices / num_threads) + (num_voices % num_threads)
-            };
+            let voices_for_thread =
+                if i != 0 {
+                    (num_voices / num_threads)
+                }
+                else {
+                    (num_voices / num_threads) + (num_voices % num_threads)
+                };
 
             for _ in (0..voices_for_thread) {
                 let (midi_connection, midi_input) = mpsc::channel();
@@ -132,7 +133,7 @@ impl Multi {
 
                     loop {
                         for voice in voices.iter_mut() {
-                            if (voice.run().is_err()) {
+                            if voice.run().is_err() {
                                 return;
                             }
                         }

@@ -14,9 +14,6 @@ mod multi;
 use midi_wrap::MidiWrap;
 
 use coreaudio::audio_unit::{AudioUnit, Type, SubType};
-use std::sync::mpsc;
-use midi::Message;
-use midi::Channel;
 use std::io;
 
 use basic_types::{BLANK_BUFFER, BUFFER_SIZE, AudioBuffer, Input};
@@ -56,7 +53,7 @@ fn main() {
         .unwrap();
 
     let mut wait_str = String::new();
-    io::stdin().read_line(&mut wait_str);
+    io::stdin().read_line(&mut wait_str).unwrap();
 
     audio_unit.close();
     drop(midi_in);

@@ -1,6 +1,6 @@
 use num::Float;
 use std::f32::consts::PI;
-use basic_types::{Output, BUFFER_SIZE, AudioBuffer};
+use basic_types::{Output, BLANK_BUFFER, AudioBuffer};
 
 const SHIFT: f32 = (1 << 16) as f32;
 
@@ -77,7 +77,7 @@ impl<T> Oscillator<T> where T: Output {
     }
 
     pub fn run(&mut self) {
-        let mut samples: AudioBuffer = [0.0; BUFFER_SIZE];
+        let mut samples: AudioBuffer = BLANK_BUFFER;
         for sample in samples.iter_mut() {
             *sample = self.phase.next().unwrap().sin();
         }

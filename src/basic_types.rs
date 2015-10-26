@@ -1,7 +1,7 @@
 // audio buffer type
 pub const BUFFER_SIZE: usize = 16;
 pub type AudioBuffer = [f32; BUFFER_SIZE];
-
+pub const BLANK_BUFFER: AudioBuffer = [0.0; BUFFER_SIZE];
 
 // audio connection traits, will eventually have threaded and unththreaded impls
 // not sure which way round these shoukd be named, currently Output puts audio into the buffer...

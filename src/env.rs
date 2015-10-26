@@ -1,6 +1,6 @@
 // really simple envelope, short linear attack/release, mostly for preventing clicks
 
-use basic_types::{Input, Output, BUFFER_SIZE, AudioBuffer};
+use basic_types::{Input, Output, BLANK_BUFFER, AudioBuffer};
 
 enum State {
     Off,
@@ -60,7 +60,7 @@ impl<T, U> Env<T, U> where T: Input, U: Output {
     }
 
     pub fn run(&mut self) {
-        let mut samples: AudioBuffer = [0.0; BUFFER_SIZE];
+        let mut samples: AudioBuffer = BLANK_BUFFER;
 
         let in_samples = self.input.get_audio();
         for (sample, in_sample) in samples.iter_mut().zip(in_samples.iter()) {

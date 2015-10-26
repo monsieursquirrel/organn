@@ -19,7 +19,7 @@ use midi::Message;
 use midi::Channel;
 use std::io;
 
-use basic_types::{BUFFER_SIZE, AudioBuffer, Input};
+use basic_types::{BLANK_BUFFER, BUFFER_SIZE, AudioBuffer, Input};
 use multi::Multi;
 
 // TODO: figure out how to retrieve this from the system
@@ -32,7 +32,7 @@ fn main() {
     let midi_in = MidiWrap::new("organn", "input", move |midi| { midi_conn.midi_message(&midi); });
 
     // audio buffer and position
-    let mut buf: AudioBuffer = [0.0; BUFFER_SIZE];
+    let mut buf: AudioBuffer = BLANK_BUFFER;
     let mut pos = BUFFER_SIZE;      // start at the end to trigger fetching audio
 
     // Construct an Output audio unit.

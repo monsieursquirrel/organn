@@ -1,4 +1,4 @@
-use basic_types::{Input, Output, BUFFER_SIZE, AudioBuffer};
+use basic_types::{Input, Output, BLANK_BUFFER, AudioBuffer};
 
 pub struct Mixer<T, U> where T: Input, U: Output {
     levels: Vec<f32>,
@@ -20,7 +20,7 @@ impl<T, U> Mixer<T, U> where T: Input, U: Output {
     }
 
     pub fn run(&mut self) {
-        let mut samples: AudioBuffer = [0.0; BUFFER_SIZE];
+        let mut samples: AudioBuffer = BLANK_BUFFER;
 
         for (input, level) in self.inputs.iter().zip(self.levels.iter()) {
             let in_samples = input.get_audio();

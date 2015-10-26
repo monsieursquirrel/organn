@@ -1,5 +1,5 @@
 // audio buffer type
-pub const BUFFER_SIZE: usize = 32;
+pub const BUFFER_SIZE: usize = 16;
 pub type AudioBuffer = [f32; BUFFER_SIZE];
 
 

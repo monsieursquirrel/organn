@@ -8,15 +8,18 @@ use mixer::Mixer;
 use env::Env;
 use midi::{self, Message};
 
+use std::sync::mpsc;
+
 pub struct Voice {
     oscillators: Vec<Oscillator<unthreaded_connection::UnthreadedOutput>>,
     mixer: Mixer<unthreaded_connection::UnthreadedInput, unthreaded_connection::UnthreadedOutput>,
     env: Env<unthreaded_connection::UnthreadedInput, threaded_connection::ThreadedOutput>,
-    pitch: midi::U7
+    pitch: midi::U7,
+    midi_input: mpsc::Receiver<midi::Message>
 }
 
 impl Voice {
-    pub fn new(sample_rate: u32) -> (Self, threaded_connection::ThreadedInput) {
+    pub fn new(sample_rate: u32) -> (Self, mpsc::Sender<midi::Message>, threaded_connection::ThreadedInput) {
         // create the parts of the signal chain
         let mut oscillators = Vec::new();
         let mut osc_connections = Vec::new();
@@ -46,13 +49,17 @@ impl Voice {
 
         let env = Env::new(env_input, env_output, 20, sample_rate);
 
+        let (midi_connection, midi_input) = mpsc::channel();
+
         (
             Voice {
                 oscillators: oscillators,
                 mixer: mixer,
                 env: env,
-                pitch: 0
+                pitch: 0,
+                midi_input: midi_input
             },
+            midi_connection,
             voice_connection
         )
     }
@@ -64,7 +71,7 @@ impl Voice {
         }
     }
 
-    pub fn midi_message(&mut self, message: &Message) {
+    fn midi_message(&mut self, message: &Message) {
         match *message {
             Message::NoteOn(_, pitch, _) => {
                 self.set_pitch(pitch as f32);
@@ -85,12 +92,31 @@ impl Voice {
         }
     }
 
-    pub fn run(&mut self) {
+    pub fn run(&mut self) -> Result<(), ()>{
+        // process messages for this voice
+        loop {
+            let message = self.midi_input.try_recv();
+            match message {
+                Ok(midi_message) => {
+                    self.midi_message(&midi_message);
+                }
+                Err(mpsc::TryRecvError::Empty) => {
+                    break;
+                }
+                Err(mpsc::TryRecvError::Disconnected) => {
+                    // get out of here
+                    return Err(());
+                }
+            }
+        }
+
         // just run every part of the audio chain in order
         for osc in self.oscillators.iter_mut() {
             osc.run();
         }
         self.mixer.run();
         self.env.run();
+
+        Ok(())
     }
 }

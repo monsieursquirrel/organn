@@ -6,14 +6,16 @@ use voice::Voice;
 use mixer::Mixer;
 use midi::{self, Message};
 
-// voices with note assignments
+use std::sync::mpsc;
+
+// voice inputs with note assignments
 struct VoiceAssign {
-    voice: Voice,
+    voice: mpsc::Sender<midi::Message>,
     note: Option<midi::U7>,
 }
 
 impl VoiceAssign {
-    fn new(voice: Voice) -> Self {
+    fn new(voice: mpsc::Sender<midi::Message>) -> Self {
         VoiceAssign {
             voice: voice,
             note: None
@@ -21,39 +23,27 @@ impl VoiceAssign {
     }
 }
 
-pub struct Multi {
+
+pub struct MultiMidiConn {
     voices: Vec<VoiceAssign>,
-    mixer: Mixer<threaded_connection::ThreadedInput, unthreaded_connection::UnthreadedOutput>,
     last_voice: usize
 }
 
-impl Multi {
-    pub fn new(num_voices: usize, sample_rate: u32) -> (Self, unthreaded_connection::UnthreadedInput) {
+impl MultiMidiConn {
+    fn new(voice_inputs: Vec<mpsc::Sender<midi::Message>>) -> Self {
+        let voice_assigns = voice_inputs
+            .into_iter()
+            .map(|v| {
+                    VoiceAssign::new(v)
+                })
+            .collect();
 
-        let mut voices = Vec::new();
-        let mut voice_connections = Vec::new();
-
-        for _ in (0..num_voices) {
-            let (voice, conn) = Voice::new(sample_rate);
-
-            voices.push(voice);
-            voice_connections.push(conn);
+        MultiMidiConn {
+            voices: voice_assigns,
+            last_voice: 0
         }
-
-        let (output, input) = unthreaded_connection::new();
-        let mixer = Mixer::new(voice_connections, vec![0.25; num_voices], output);
-
-        let voice_assigns = voices.into_iter().map(|ref_voc| VoiceAssign::new(ref_voc)).collect();
-
-        (
-            Multi {
-                voices: voice_assigns,
-                mixer: mixer,
-                last_voice: 0
-            },
-            input
-        )
     }
+
 
     fn pick_voice(&mut self) -> &mut VoiceAssign {
         let num_voices = self.voices.len();
@@ -74,26 +64,62 @@ impl Multi {
                 // pick a voice to use
                 let mut voice = self.pick_voice();
                 voice.note = Some(pitch);
-                voice.voice.midi_message(message);
+                voice.voice.send(message.clone());
             }
 
             Message::NoteOff(_, pitch, _) => {
                 // send to appropriate voice(s) and unassign their notes
                 for voice in self.voices.iter_mut().filter(|v| v.note == Some(pitch)) {
                     voice.note = None;
-                    voice.voice.midi_message(message);
+                    voice.voice.send(message.clone());
                 }
             }
 
             _ => {
-                // send to everything!
+                // TODO: send to everything!
             }
         }
+    }
+}
+
+pub struct Multi {
+    voices: Vec<Voice>,
+    mixer: Mixer<threaded_connection::ThreadedInput, unthreaded_connection::UnthreadedOutput>,
+}
+
+impl Multi {
+    pub fn new(num_voices: usize, sample_rate: u32) -> (Self, MultiMidiConn, unthreaded_connection::UnthreadedInput) {
+
+        let mut voices = Vec::new();
+        let mut midi_connections = Vec::new();
+        let mut voice_connections = Vec::new();
+
+        for _ in (0..num_voices) {
+            let (voice, midi_conn, conn) = Voice::new(sample_rate);
+
+            voices.push(voice);
+            midi_connections.push(midi_conn);
+            voice_connections.push(conn);
+        }
+
+        let midi_conn = MultiMidiConn::new(midi_connections);
+
+        let (output, input) = unthreaded_connection::new();
+        let mixer = Mixer::new(voice_connections, vec![0.25; num_voices], output);
+
+        (
+            Multi {
+                voices: voices,
+                mixer: mixer
+            },
+            midi_conn,
+            input
+        )
     }
 
     pub fn run(&mut self) {
         for voice in self.voices.iter_mut() {
-            voice.voice.run();
+            voice.run();
         }
         self.mixer.run();
     }

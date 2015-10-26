@@ -8,13 +8,13 @@ use std::ptr;
 use std::ffi::CString;
 use std::marker::PhantomData;
 
-pub struct MidiWrap<A> where A: Fn(midi::Message) {
+pub struct MidiWrap<A> where A: FnMut(midi::Message) {
     client: core_midi_services::MIDIClientRef,
     port: core_midi_services::MIDIPortRef,
     thing: Box<A>
 }
 
-impl<A> MidiWrap<A> where A: Fn(midi::Message)  {
+impl<A> MidiWrap<A> where A: FnMut(midi::Message)  {
     pub fn new(clinet_name: &str, port_name: &str, callback: A) -> Option<MidiWrap<A>> {
 
         let thing = Box::new(callback);
@@ -69,7 +69,7 @@ impl<A> MidiWrap<A> where A: Fn(midi::Message)  {
             use std::intrinsics::transmute;
             use std::slice;
 
-            let wrap_fn: &A = transmute(read_proc_ref_con);
+            let wrap_fn: &mut A = transmute(read_proc_ref_con);
             let mut packet = &(*pktlist).packet[0];
             for _ in (0..(*pktlist).numPackets) {
                 let bytes = slice::from_raw_parts(packet.data.as_ptr(), packet.length  as usize);
@@ -83,7 +83,7 @@ impl<A> MidiWrap<A> where A: Fn(midi::Message)  {
     }
 }
 
-impl<A> Drop for MidiWrap<A> where A: Fn(midi::Message)  {
+impl<A> Drop for MidiWrap<A> where A: FnMut(midi::Message)  {
     fn drop(&mut self) {
         unsafe {
             core_midi_services::MIDIPortDispose(self.port);

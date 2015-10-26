@@ -98,6 +98,7 @@ fn parse_midi_bytes(bytes: &[u8]) -> Option<midi::Message> {
         match status {
             8 if bytes.len() >= 3 => { Some(midi::NoteOff(channel, bytes[1], bytes[2])) }
             9 if bytes.len() >= 3 => { Some(midi::NoteOn(channel, bytes[1], bytes[2])) }
+            11 if bytes.len() >= 3 => { Some(midi::ControlChange(channel, bytes[1], bytes[2])) }
             _ => { None }
         }
     }

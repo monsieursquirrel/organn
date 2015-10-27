@@ -148,3 +148,10 @@ impl Voice {
         Ok(())
     }
 }
+
+// declare that Voice objects can be sent between threads
+// necessary because unthreaded buffers can't cross thread boundaries
+// safe because both ends of the buffer are transferrred to the new thread
+unsafe impl Send for Voice {
+
+}

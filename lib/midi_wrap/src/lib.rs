@@ -3,16 +3,18 @@ extern crate CoreFoundation_sys;
 extern crate midi;
 
 
-#[allow(non_camel_case_types, non_snake_case)]
+#[allow(non_camel_case_types, non_snake_case, non_upper_case_globals)]
 mod core_midi_services;
 
 use std::ptr;
 use std::ffi::CString;
-use std::marker::PhantomData;
 
 pub struct MidiWrap<A> where A: FnMut(midi::Message) {
     client: core_midi_services::MIDIClientRef,
     port: core_midi_services::MIDIPortRef,
+
+    // just need to store this data somewhere, it's used in the coremidi callback fn
+    #[allow(dead_code)]
     closure_data: Box<A>
 }
 

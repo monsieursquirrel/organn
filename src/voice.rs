@@ -1,7 +1,7 @@
 
 use pitch_calc::Step;
 
-use basic_types::{threaded_connection, unthreaded_connection, Output};
+use basic_types::{unthreaded_connection, Output};
 use oscillator::Oscillator;
 use mixer::Mixer;
 use env::Env;

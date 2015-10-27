@@ -4,7 +4,7 @@ version = "0.4.0"
 authors = ["monsieursquirrel <conrad@bebbington.org>"]
 
 [dependencies]
-coreaudio-rs = "0.0.6"
+coreaudio-rs = "0.2.0"
 pitch_calc = "0.9.7"
 midi = "0.1.0"
 

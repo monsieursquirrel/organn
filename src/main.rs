@@ -18,7 +18,6 @@ use std::io;
 use basic_types::{BLANK_BUFFER, BUFFER_SIZE, AudioBuffer, Input};
 use multi::Multi;
 
-// TODO: figure out how to retrieve this from the system
 const SAMPLE_RATE: u32 = 44_100;
 
 fn main() {
@@ -32,8 +31,8 @@ fn main() {
     let mut pos = BUFFER_SIZE;      // start at the end to trigger fetching audio
 
     // Construct an Output audio unit.
-    let audio_unit = AudioUnit::new(Type::Output, SubType::HalOutput)
-        .render_callback(Box::new(move |buffer, num_frames| {
+    let mut audio_unit = AudioUnit::new(Type::Output, SubType::HalOutput).unwrap();
+    audio_unit.render_callback(Some(Box::new(move |buffer, num_frames| {
             for frame in (0..num_frames) {
                 if pos >= buf.len() {
                     multi.run();
@@ -47,13 +46,13 @@ fn main() {
                 }
             }
             Ok(())
-        }))
-        .start()
-        .unwrap();
+        })));
+    audio_unit.set_sample_rate(SAMPLE_RATE as f64).unwrap();
+    audio_unit.start().unwrap();
 
     let mut wait_str = String::new();
     io::stdin().read_line(&mut wait_str).unwrap();
 
-    audio_unit.close();
+    audio_unit.stop().unwrap();
     drop(midi_in);
 }

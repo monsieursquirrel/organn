@@ -104,7 +104,7 @@ impl Multi {
 
         // spawn voice threads
         for i in (0..num_threads) {
-            let mut voices = Vec::new();
+            let mut voice_io = Vec::new();
 
             // thread 0 gets extra voices if (num_voices / num_threads) has a remainder
             let voices_for_thread =
@@ -118,14 +118,19 @@ impl Multi {
             for _ in (0..voices_for_thread) {
                 let (midi_connection, midi_input) = mpsc::channel();
                 let (voice_output, conn) = threaded_connection::new();
-                let voice = Voice::new(sample_rate, midi_input, voice_output);
-                voices.push(voice);
+                voice_io.push((midi_input, voice_output));
 
                 midi_connections.push(midi_connection);
                 voice_connections.push(conn);
             }
 
             let thread = thread::spawn(move || {
+                    let mut voices = Vec::new();
+                    for (midi_input, voice_output) in voice_io {
+                        let voice = Voice::new(sample_rate, midi_input, voice_output);
+                        voices.push(voice);
+                    }
+
                     loop {
                         for voice in voices.iter_mut() {
                             if voice.run().is_err() {

@@ -2,6 +2,8 @@ extern crate libc;
 extern crate CoreFoundation_sys;
 extern crate midi;
 
+
+#[allow(non_camel_case_types, non_snake_case)]
 mod core_midi_services;
 
 use std::ptr;
@@ -11,13 +13,13 @@ use std::marker::PhantomData;
 pub struct MidiWrap<A> where A: FnMut(midi::Message) {
     client: core_midi_services::MIDIClientRef,
     port: core_midi_services::MIDIPortRef,
-    thing: Box<A>
+    closure_data: Box<A>
 }
 
 impl<A> MidiWrap<A> where A: FnMut(midi::Message)  {
     pub fn new(clinet_name: &str, port_name: &str, callback: A) -> Option<MidiWrap<A>> {
 
-        let thing = Box::new(callback);
+        let closure_data = Box::new(callback);
 
         // create a midi client
         let mut client: core_midi_services::MIDIClientRef = 0;
@@ -42,7 +44,7 @@ impl<A> MidiWrap<A> where A: FnMut(midi::Message)  {
                 CoreFoundation_sys::kCFAllocatorMalloc,
                 CString::new(port_name).unwrap().as_ptr(),
                 CoreFoundation_sys::kCFStringEncodingUTF8);
-            status = core_midi_services::MIDIInputPortCreate(client,funky_string, Some(MidiWrap::<A>::midi_callback), transmute(&*thing), &mut port);
+            status = core_midi_services::MIDIInputPortCreate(client,funky_string, Some(MidiWrap::<A>::midi_callback), transmute(&*closure_data), &mut port);
 
             // connect everything to the input
             let num_sources = core_midi_services::MIDIGetNumberOfSources();
@@ -58,7 +60,7 @@ impl<A> MidiWrap<A> where A: FnMut(midi::Message)  {
         Some(MidiWrap {
             client: client,
             port: port,
-            thing: thing
+            closure_data: closure_data
         })
     }
 

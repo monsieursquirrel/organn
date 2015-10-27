@@ -1,5 +1,4 @@
 extern crate coreaudio_rs as coreaudio;
-extern crate num;
 extern crate pitch_calc;
 extern crate midi;
 extern crate midi_wrap;

@@ -1,4 +1,3 @@
-use num::Float;
 use std::f32::consts::PI;
 use basic_types::{Output, BLANK_BUFFER, AudioBuffer};
 

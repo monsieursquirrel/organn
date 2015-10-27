@@ -1,8 +1,7 @@
 
 use pitch_calc::Step;
 
-use basic_types::threaded_connection;
-use basic_types::unthreaded_connection;
+use basic_types::{threaded_connection, unthreaded_connection, Output};
 use oscillator::Oscillator;
 use mixer::Mixer;
 use env::Env;
@@ -12,16 +11,16 @@ use std::sync::mpsc;
 
 static MIX_MAX: f32 = 0.25;
 
-pub struct Voice {
+pub struct Voice<T> where T: Output {
     oscillators: Vec<Oscillator<unthreaded_connection::UnthreadedOutput>>,
     mixer: Mixer<unthreaded_connection::UnthreadedInput, unthreaded_connection::UnthreadedOutput>,
-    env: Env<unthreaded_connection::UnthreadedInput, threaded_connection::ThreadedOutput>,
+    env: Env<unthreaded_connection::UnthreadedInput, T>,
     pitch: midi::U7,
     midi_input: mpsc::Receiver<midi::Message>
 }
 
-impl Voice {
-    pub fn new(sample_rate: u32, midi_in: mpsc::Receiver<midi::Message>, output: threaded_connection::ThreadedOutput) -> Self {
+impl<T> Voice<T> where T: Output {
+    pub fn new(sample_rate: u32, midi_in: mpsc::Receiver<midi::Message>, output: T) -> Self {
         // create the parts of the signal chain
         let mut oscillators = Vec::new();
         let mut osc_connections = Vec::new();

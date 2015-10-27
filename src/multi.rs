@@ -100,11 +100,14 @@ impl Multi {
 
         let mut voice_threads = Vec::new();
         let mut midi_connections = Vec::new();
-        let mut voice_connections = Vec::new();
+        let mut thread_connections = Vec::new();
 
         // spawn voice threads
         for i in (0..num_threads) {
             let mut voice_io = Vec::new();
+
+            let (thread_out, mix_input) = threaded_connection::new();
+            thread_connections.push(mix_input);
 
             // thread 0 gets extra voices if (num_voices / num_threads) has a remainder
             let voices_for_thread =
@@ -117,19 +120,20 @@ impl Multi {
 
             for _ in (0..voices_for_thread) {
                 let (midi_connection, midi_input) = mpsc::channel();
-                let (voice_output, conn) = threaded_connection::new();
-                voice_io.push((midi_input, voice_output));
-
+                voice_io.push(midi_input);
                 midi_connections.push(midi_connection);
-                voice_connections.push(conn);
             }
 
             let thread = thread::spawn(move || {
                     let mut voices = Vec::new();
-                    for (midi_input, voice_output) in voice_io {
+                    let mut mixer_inputs = Vec::new();
+                    for midi_input in voice_io {
+                        let (voice_output, mix_input) = unthreaded_connection::new();
                         let voice = Voice::new(sample_rate, midi_input, voice_output);
                         voices.push(voice);
+                        mixer_inputs.push(mix_input);
                     }
+                    let mut thread_mix = Mixer::new(mixer_inputs, vec![1.0; voices_for_thread], thread_out);
 
                     loop {
                         for voice in voices.iter_mut() {
@@ -137,6 +141,7 @@ impl Multi {
                                 return;
                             }
                         }
+                        thread_mix.run();
                     }
                 });
 
@@ -146,7 +151,7 @@ impl Multi {
         let midi_conn = MultiMidiConn::new(midi_connections);
 
         let (output, input) = unthreaded_connection::new();
-        let mixer = Mixer::new(voice_connections, vec![0.25; num_voices], output);
+        let mixer = Mixer::new(thread_connections, vec![0.25; num_threads], output);
 
         (
             Multi {

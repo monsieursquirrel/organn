@@ -1,44 +1,30 @@
 use std::f32::consts::PI;
 use basic_types::{Output, BLANK_BUFFER, AudioBuffer};
 
-const SHIFT: f32 = (1 << 16) as f32;
-
 struct PhaseIter {
     pos: u32,
-    loop_len: u32,
+    increment: u32,
+    sample_rate: u32,
     outscale: f32,
-    sample_rate: u32
 }
 
 impl PhaseIter {
-    fn calc_loop(&self, freq: f32) -> u32 {
-        (((self.sample_rate as f32) * SHIFT) / (freq)) as u32
-    }
-
     fn new(sample_rate: u32, outscale: f32) -> Self {
         PhaseIter {
             pos: 0,
-            loop_len: 0,
+            increment: 0,
             outscale: outscale,
             sample_rate: sample_rate
         }
     }
 
     fn set_freq(&mut self, freq: f32) {
-        if freq > 0.0 && freq < (self.sample_rate as f32 / 2.0) {
-            // try to avoid jumps in output by remapping the current position to the new loop len
-            let new_len = self.calc_loop(freq);
-            let new_pos = if self.loop_len > 0 {
-                    (((self.pos as u64) * (new_len as u64)) / (self.loop_len as u64)) as u32
-                }
-                else {
-                    0
-                };
-            self.loop_len = new_len;
-            self.pos = new_pos;
+        // stay away from the nyquist limit!
+        if freq > 0.0 && freq < (self.sample_rate as f32 / 2.1) {
+            self.increment = ((freq * (2 as f32).powi(32)) / self.sample_rate as f32) as u32;
         }
         else {
-            self.loop_len = 0;
+            self.increment = 0;
             self.pos = 0;
         }
     }
@@ -47,14 +33,9 @@ impl PhaseIter {
 impl Iterator for PhaseIter {
     type Item = f32;
     fn next(&mut self) -> Option<f32> {
-        if self.loop_len > 0 {
-            let pos = self.pos;
-            self.pos = (self.pos + (1 << 16)) % self.loop_len;
-            Some(((pos as f32) * self.outscale) / (self.loop_len as f32))
-        }
-        else {
-            Some(0.0)
-        }
+        let pos = self.pos;
+        self.pos = self.pos.wrapping_add(self.increment);
+        Some(((pos as f32) * self.outscale) / (2 as f32).powi(32))
     }
 }
 

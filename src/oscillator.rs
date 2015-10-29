@@ -58,8 +58,8 @@ impl<T> Oscillator<T> where T: Output {
 
     pub fn run(&mut self) {
         let mut samples: AudioBuffer = BLANK_BUFFER;
-        for sample in samples.iter_mut() {
-            *sample = self.phase.next().unwrap().sin();
+        for (sample, phase) in samples.iter_mut().zip(&mut self.phase) {
+            *sample = phase.sin();
         }
         self.output.supply_audio(samples);
     }

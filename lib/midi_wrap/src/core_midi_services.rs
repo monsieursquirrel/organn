@@ -6,13 +6,13 @@ use CoreFoundation_sys;
 pub unsafe fn MIDIPacketNext(pkt: &MIDIPacket) -> &MIDIPacket
 {
     use std::intrinsics::transmute;
-	transmute(&(*pkt).data[(*pkt).length as usize])
+    transmute(&(*pkt).data[(*pkt).length as usize])
 }
 
 #[cfg(any(target_arch = "arm", target_arch = "aarch64"))]
 pub unsafe fn MIDIPacketNext(pkt: &MIDIPacket) -> &MIDIPacket
 {
-	// MIDIPacket must be 4-byte aligned
+    // MIDIPacket must be 4-byte aligned
     use std::intrinsics::transmute;
     ((transmute::<_, usize>(&(*pkt).data[(*pkt).length as usize]) + 3) & !3) as *const MIDIPacket
 }

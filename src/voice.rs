@@ -20,7 +20,7 @@ pub struct Voice<T> where T: Output {
 }
 
 impl<T> Voice<T> where T: Output {
-    pub fn new(sample_rate: u32, midi_in: mpsc::Receiver<midi::Message>, output: T) -> Self {
+    pub fn new(sample_rate: u32, midi_in: mpsc::Receiver<midi::Message>, voice_output: T) -> Self {
         // create the parts of the signal chain
         let mut oscillators = Vec::new();
         let mut osc_connections = Vec::new();
@@ -47,7 +47,7 @@ impl<T> Voice<T> where T: Output {
         mixer.set_level(7, 0.1 * MIX_MAX);
         mixer.set_level(8, 0.1 * MIX_MAX);
 
-        let env = Env::new(env_input, output, 20, sample_rate);
+        let env = Env::new(env_input, voice_output, 20, sample_rate);
 
         Voice {
             oscillators: oscillators,

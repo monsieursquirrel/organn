@@ -65,21 +65,21 @@ impl MultiMidiConn {
                 // pick a voice to use
                 let mut voice = self.pick_voice();
                 voice.note = Some(pitch);
-                voice.voice.send(message.clone());
+                voice.voice.send(message.clone()).unwrap();
             }
 
             Message::NoteOff(_, pitch, _) => {
                 // send to appropriate voice(s) and unassign their notes
                 for voice in self.voices.iter_mut().filter(|v| v.note == Some(pitch)) {
                     voice.note = None;
-                    voice.voice.send(message.clone());
+                    voice.voice.send(message.clone()).unwrap();
                 }
             }
 
             Message::ControlChange(_, _, _) => {
                 // send to all voices
                 for voice in self.voices.iter() {
-                    voice.voice.send(message.clone());
+                    voice.voice.send(message.clone()).unwrap();
                 }
             }
 

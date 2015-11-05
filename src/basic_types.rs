@@ -71,7 +71,7 @@ pub mod threaded_connection {
 
     impl Output for ThreadedOutput {
         fn supply_audio(&self, buffer: AudioBuffer) {
-            self.send(buffer);
+            self.send(buffer).unwrap();
         }
     }
 

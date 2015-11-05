@@ -46,7 +46,7 @@ fn main() {
                 }
             }
             Ok(())
-        })));
+        }))).unwrap();
     audio_unit.set_sample_rate(SAMPLE_RATE as f64).unwrap();
     audio_unit.start().unwrap();
 

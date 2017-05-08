@@ -21,7 +21,7 @@ pub trait Input {
 pub mod unthreaded_connection {
     use std::cell::RefCell;
     use std::rc::Rc;
-    use basic_types::{AudioBuffer, Output, Input};
+    use basic_types::{AudioBuffer, BLANK_BUFFER, Output, Input};
 
     pub struct UnthreadedOutput {
         buffer: Rc<RefCell<Option<AudioBuffer>>>
@@ -59,25 +59,28 @@ pub mod unthreaded_connection {
 
 
 pub mod threaded_connection {
-    use std::sync::mpsc::{SyncSender, Receiver, sync_channel};
-    use basic_types::{AudioBuffer, Output, Input};
+    use rb::{RB, SpscRb, Producer, RbProducer, Consumer, RbConsumer};
+    use basic_types::{AudioBuffer, BLANK_BUFFER, Output, Input};
 
-    pub type ThreadedOutput = SyncSender<AudioBuffer>;
-    pub type ThreadedInput = Receiver<AudioBuffer>;
+    pub type ThreadedOutput = Producer<AudioBuffer>;
+    pub type ThreadedInput = Consumer<AudioBuffer>;
 
     pub fn new() -> (ThreadedOutput, ThreadedInput) {
-        sync_channel(1)
+        let buf = SpscRb::<AudioBuffer>::new(1);
+        (buf.producer(), buf.consumer())
     }
 
     impl Output for ThreadedOutput {
         fn supply_audio(&self, buffer: AudioBuffer) {
-            self.send(buffer).unwrap();
+            self.write_blocking(&[buffer]);
         }
     }
 
     impl Input for ThreadedInput {
         fn get_audio(&self) -> AudioBuffer {
-            self.recv().unwrap()
+            let mut buf = [BLANK_BUFFER; 1];
+            self.read_blocking(&mut buf);
+            buf[0]
         }
     }
 }

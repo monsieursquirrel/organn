@@ -6,6 +6,7 @@ dependencies = [
  "midi 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "midi_wrap 0.1.0",
  "pitch_calc 0.9.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rb 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -140,6 +141,11 @@ dependencies = [
 ]
 
 [[package]]
+name = "rb"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
 name = "rustc-serialize"
 version = "0.3.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -159,4 +165,5 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum num-traits 0.1.37 (registry+https://github.com/rust-lang/crates.io-index)" = "e1cbfa3781f3fe73dc05321bed52a06d2d491eaa764c52335cf4399f046ece99"
 "checksum pitch_calc 0.9.7 (registry+https://github.com/rust-lang/crates.io-index)" = "590b1d0b7fb997429fc882eaf47fec82b8cc325e9d25eb22e493d075f4e9ec25"
 "checksum rand 0.3.15 (registry+https://github.com/rust-lang/crates.io-index)" = "022e0636ec2519ddae48154b028864bdce4eaf7d35226ab8e65c611be97b189d"
+"checksum rb 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "bf4244668d567959acbf78b19ce254f4f82bdf731b7349b79e3ae01504e28980"
 "checksum rustc-serialize 0.3.24 (registry+https://github.com/rust-lang/crates.io-index)" = "dcf128d1287d2ea9d80910b5f1120d0b8eede3fbf1abe91c40d39ea7d51e6fda"
